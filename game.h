@@ -4,7 +4,7 @@
 #include <cmath>
 #include <SDL/SDL.h>
 
-const float fov = M_PI/3;
+const float fov = 60 * M_PI / 180.0;
 const int mapw = 16;
 const int maph = 16;
 const char map[maph*mapw+1] = "\
@@ -14,13 +14,13 @@ const char map[maph*mapw+1] = "\
 1     0        0\
 0     0  1110000\
 0     3        0\
-0   10000      0\
+0     000      0\
 0   0   11100  0\
 0   0   0      0\
-0   0   1  00000\
-0       1      0\
+0   0      00000\
+0              0\
 2       1      0\
-0       0      0\
+0       0   0  0\
 0 0000000      0\
 0              0\
 0002222222200000";
@@ -36,8 +36,11 @@ class Game
         bool running();
 
     private:
-        void putpixel(int x, int y, Uint32 pixel);
-        Uint32 getpixel(int itex, int x, int y);
+        void set_pixel(int x, int y, Uint32 pixel);
+        Uint32 get_pixel_tex(int itex, int x, int y);
+
+        Uint32 rgb_to_int(int r, int g, int b);
+        Uint32 apply_light(Uint32 color, float factor);
 
         float x_,y_,angle_; //player position and rotation
         int turn_, walk_; // player input
