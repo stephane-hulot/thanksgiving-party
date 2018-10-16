@@ -1,18 +1,20 @@
 #include <ctime>
 #include <iostream>
-#include "game.h"
+#include "renderer.h"
+#include "player.h"
 
 int main()
 {
-    Game game;
-    game.init_sdl("Thanksgiving Party", 1280, 720, 3);
+	Player player;
+    Renderer* renderer = new Renderer(&player);
+    renderer->init_sdl("Thanksgiving Party", 1280, 720, 3);
               
-    while (game.running())
+    while (!player.wants_to_quit)
     {
-        game.handle_events(); // TODO make x_,y_,angle_ increments depend on the dt
-        game.draw();          // TODO call draw() 25 times per second only
+        player.handle_events(); // TODO make x_,y_,angle_ increments depend on the dt
+        renderer->draw();          // TODO call draw() 25 times per second only
     }
-    game.clean();
+    renderer->clean();
     return 0;
 }
 
