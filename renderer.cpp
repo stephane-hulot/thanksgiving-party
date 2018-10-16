@@ -3,12 +3,12 @@
 #include <cmath>
 #include "renderer.h"
 
-Renderer::Renderer(Player* p) : sdl_screen_(NULL), textures_(NULL), ntextures(0), texsize(0), player(p)
+Renderer::Renderer(Player* p) : sdl_screen_(NULL), textures_(NULL), ntextures(0), texsize(0), zbuffer(NULL), player(p)
 {
     
 }
 
-bool Renderer::init_sdl(const char* title, int width, int height, int bpp)
+bool Renderer::init_sdl(const char* title, ushort width, ushort height, unsigned char bpp)
 {
     if(SDL_Init(SDL_INIT_EVERYTHING))
     {
@@ -51,14 +51,15 @@ bool Renderer::init_sdl(const char* title, int width, int height, int bpp)
 
     std::cout << "Successfully read " << ntextures << " textures of " << texsize << "x" << texsize << " pixels" << std::endl;
 
+    zbuffer = new float[(int)sdl_screen_->w];
+
     return true;
 }
 
 void Renderer::draw()
 {
     SDL_FillRect(sdl_screen_, NULL, SDL_MapRGB(sdl_screen_->format, 255, 255, 255)); // TODO check for bpp
-    
-    
+
     int width = sdl_screen_->w; //screen width
     int height = sdl_screen_->h; //screen height
     int middle = height / 2;
@@ -68,20 +69,32 @@ void Renderer::draw()
         //angle of the ray in rad
         float ray_angle = (1.0 - i / float(width)) * (player->get_angle() - fov / 2.0) + i / float(width) * (player->get_angle() + fov / 2.0);
 
-        for(float dist = 0; dist < 20; dist += 0.01) //makes the ray move forward step by step
+        float dist = 0;
+        bool hit_wall = false;
+        float projectDist = 0;
+
+        //we don't need to calculate sin and cos for each step
+        float cos_angle = cos(ray_angle);
+        float sin_angle = sin(ray_angle);
+
+        while(!hit_wall || dist > 40) //makes the ray move forward step by step
         {
+            dist += 0.01;
             //pos of the tip of the ray for this iteration
-            float ray_x = player->get_pos_x() + cos(ray_angle) * dist;
-            float ray_y = player->get_pos_y() + sin(ray_angle) * dist;
+            float ray_x = player->get_pos_x() + cos_angle * dist;
+            float ray_y = player->get_pos_y() + sin_angle * dist;
 
             int tile_id = int(ray_x) + int(ray_y) * mapw; //id of current tile
             if(map[tile_id] != ' ') //the current tile is not empty, we hit a wall
             {
+                hit_wall = true;
                 // we need to project the distance onto a flat plane perpendicular to the player
                 //in order to avoid fisheye effect
-                float projectDist = dist * cos(ray_angle - player->get_angle());
+                projectDist = dist * cos(ray_angle - player->get_angle());
                 // height of the current vertical segment to draw
                 int wall_height = (height / projectDist);
+
+                zbuffer[i] = dist;
                 
                 ray_x -= floor(ray_x + 0.5);
                 ray_y -= floor(ray_y + 0.5);
@@ -106,6 +119,7 @@ void Renderer::draw()
                     else //top < j < bottom, draw wall
                     {
                         int texture_y = (j - wall_top) / (float)wall_height * 64;
+                        //displays the pixel and apply lighting
                         set_pixel(i, j, apply_light(get_pixel_tex(wall_tex, texture_x, texture_y), vertical ? 1 : 0.7));
                     }
 
@@ -117,17 +131,61 @@ void Renderer::draw()
                             set_pixel(i, j, get_pixel_tex(4, (i - offset) / 6, (j - 6 - height) / 6 + 64));
                     }
                 }
-
-                //we hit a wall so we don't need to calculate the ray any further
-                break;
-            }
-        }
+            }   
+        } 
     }
 
-    
+    //TODO : add sorting based on the distance from the player
+    draw_sprite(5, 4.5, 6.5, 600);
+    draw_sprite(5, 3.5, 7.5, 600);
+    draw_sprite(5, 12.5, 2, 600);
+    draw_sprite(5, 7.5, 6.5, 600);
 
     SDL_Flip(sdl_screen_);
 }
+
+void Renderer::draw_sprite(ushort itex, ushort sprite_x, ushort sprite_y, ushort sprite_size)
+{
+    float sprite_dir = atan2(-player->get_pos_y()+ sprite_y, sprite_x - player->get_pos_x());
+    float sprite_dist = sqrt((player->get_pos_x() - sprite_x) * (player->get_pos_x() - sprite_x) + (player->get_pos_y() - sprite_y) * (player->get_pos_y() - sprite_y));
+    int sprite_width = std::min(800, (int)(1 / sprite_dist * sprite_size));
+    int sprite_offset = (sprite_dir - player->get_angle()) * sdl_screen_->w + (sdl_screen_->w / 2) - (sprite_width / 2);
+    int v_offset = 100;
+    int middle = sdl_screen_->h / 2;
+    int top = middle - sprite_width / 2 + v_offset / sprite_dist;
+    int bottom = middle + sprite_width / 2 + v_offset / sprite_dist;
+    float height = bottom - top;
+
+    for(int x = sprite_offset; x < sprite_offset + sprite_width; x++)
+    {   
+        if(sprite_dist < zbuffer[x])
+        {
+            for(int y = top; y < bottom; y++)
+            {
+                int texture_x = (x - sprite_offset) / (float)(sprite_width) * 64;
+                int texture_y = (y - top) / (float)height * 64;
+
+                if(get_pixel_tex(itex, texture_x, texture_y) != rgb_to_int(0, 255, 255))
+                    set_pixel(x, y, get_pixel_tex(itex, texture_x, texture_y));
+            }
+        }
+    }
+}
+
+/*
+void Renderer::display_framerate(ushort fps)
+{
+    TTF_Init();
+    std::string text = std::to_string(fps) + " FPS";
+    TTF_Font *font = TTF_OpenFont("FreeSans.ttf", 28);
+    SDL_Color color = {0, 0, 0};
+    SDL_Surface display = TTF_RenderText_Solid(font, text, color);
+    SDL_Rect pos;
+    pos.x = 10;
+    pos.y = 10;
+    SDL_BlitSurface(display, NULL, sdl_screen_, &pos);
+}
+*/
 
 void Renderer::clean()
 {
@@ -140,10 +198,10 @@ void Renderer::clean()
 // TODO if (SDL_BYTEORDER == SDL_BIG_ENDIAN)
 
 //Gets a pixel from the texture file
-Uint32 Renderer::get_pixel_tex(int itex, int x, int y)
+Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y)
 {
     int texsize = textures_->h;
-    if(itex < 0 || itex >= ntextures || x < 0 || y < 0 || x >= texsize || y >= texsize) 
+    if(itex >= ntextures || x >= texsize || y >= texsize) 
         return 0;
 
     Uint8 *p = (Uint8 *)textures_->pixels + y * textures_->pitch + (x+texsize * itex) * textures_->format->BytesPerPixel;
@@ -152,25 +210,22 @@ Uint32 Renderer::get_pixel_tex(int itex, int x, int y)
 
 
 //sets a pixel on the screen
-void Renderer::set_pixel(int x, int y, Uint32 pixel)
+void Renderer::set_pixel(ushort x, ushort y, Uint32 pixel)
 {
-    if (x < 0 || y < 0 || x >= sdl_screen_->w || y >= sdl_screen_->h)
+    if (x >= sdl_screen_->w || y >= sdl_screen_->h)
         return;
 
-    int bpp = sdl_screen_->format->BytesPerPixel;
+    unsigned char bpp = sdl_screen_->format->BytesPerPixel;
     Uint8 *p = (Uint8 *)sdl_screen_->pixels + y * sdl_screen_->pitch + x * bpp;
-    for(int i = 0; i < bpp; i++)
+    for(unsigned char i = 0; i < bpp; i++)
     {
         p[i] = ((Uint8*)&pixel)[i];
     }
 }
 
-Uint32 Renderer::rgb_to_int(int r, int g, int b)
+Uint32 Renderer::rgb_to_int(unsigned char r, unsigned char g, unsigned char b)
 {
-    if (r < 0 || g < 0 || b < 0 || r > 255 || g > 255 || b > 255)
-        return 0;
-
-    return (r * 65536) + (g * 256) + b;
+    return (r << 16) + (g << 8) + b;
 }
 
 Uint32 Renderer::apply_light(Uint32 color, float factor)

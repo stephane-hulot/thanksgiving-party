@@ -18,8 +18,8 @@ class Player
         float get_angle();
 
     private:
-        float x_,y_,angle_; //player position and rotation
-        int turn_, walk_; // player input
+        float x, y, angle; //player position and rotation
+        float turn, walk_x, walk_y; // player input
 
 };
 
