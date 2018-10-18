@@ -10,17 +10,21 @@ class Player
 	public:
         Player();
         void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
-        void handle_events();
+        void handle_events(float dt);
         bool wants_to_quit;
 
-        float get_pos_x();
-        float get_pos_y();
+        float get_x();
+        float get_y();
         float get_angle();
 
     private:
         float x, y, angle; //player position and rotation
         float turn, walk_x, walk_y; // player input
+        int speed, turn_speed;
+        bool* pressed_keys;
 
+        void update_key(SDLKey key, bool state);
+        void Fire();
 };
 
 #endif

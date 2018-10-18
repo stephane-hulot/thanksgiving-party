@@ -6,22 +6,31 @@
 int main()
 {
     uint lastTime = 0;
+    uint lastFPSDisplay = 0;
 
 	Player player;
     Renderer* renderer = new Renderer(&player);
-    renderer->init_sdl("Thanksgiving Party", 1280, 720, 3);
+
+    if(!renderer->init_sdl("Thanksgiving Party", 1280, 720))
+        return 0;
               
     while (!player.wants_to_quit)
     {
-        player.handle_events(); // TODO make x_,y_,angle_ increments depend on the dt
-        renderer->draw();          // TODO call draw() 25 times per second only
-
-        ushort dt = SDL_GetTicks() - lastTime;
-        int fps = 1000 / dt;
-        std::cout<<fps<<" FPS"<<std::endl;
-        //renderer->display_framerate(fps);
+        float dt = (SDL_GetTicks() - lastTime) / 1000.0;
         lastTime = SDL_GetTicks();
+        if(dt == 0) dt = 1; //prevent division by zero
+
+        if(lastFPSDisplay + 200 < lastTime)
+        {
+            lastFPSDisplay = lastTime;
+            int fps = 1 / dt;
+            std::cout<<fps<<" FPS"<<std::endl;
+        }
+
+        player.handle_events(dt);
+        renderer->draw();
     }
+    
     renderer->clean();
     return 0;
 }
