@@ -8,13 +8,14 @@ int main()
     uint lastTime = 0;
     uint lastFPSDisplay = 0;
 
-	Player player;
-    Renderer* renderer = new Renderer(&player);
+    Map map;
+	Player* player = new Player(&map);
+    Renderer* renderer = new Renderer(player, &map);
 
     if(!renderer->init_sdl("Thanksgiving Party", 1280, 720))
         return 0;
               
-    while (!player.wants_to_quit)
+    while (!player->wants_to_quit)
     {
         float dt = (SDL_GetTicks() - lastTime) / 1000.0;
         lastTime = SDL_GetTicks();
@@ -27,7 +28,7 @@ int main()
             std::cout<<fps<<" FPS"<<std::endl;
         }
 
-        player.handle_events(dt);
+        player->handle_events(dt);
         renderer->draw();
     }
     

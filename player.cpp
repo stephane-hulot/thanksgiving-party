@@ -3,10 +3,14 @@
 #include <cmath>
 #include "player.h"
 
-Player::Player() : wants_to_quit(false), x(3), y(3), angle(0), turn(0), walk_x(0), walk_y(0),
-    speed(30), turn_speed(35), pressed_keys(NULL)
+Player::Player(Map* m) : wants_to_quit(false), x(3), y(3), angle(0), turn(0), walk_x(0), walk_y(0),
+    speed(30), turn_accel(0.18), turn_max(0.06), pressed_keys(NULL), map(m)
 {
     pressed_keys = new bool[7];
+    for(int i = 0; i < 7; i++)
+    {
+        pressed_keys[i] = false;
+    }
 }
 
 void Player::handle_events(float dt)
@@ -45,29 +49,30 @@ void Player::handle_events(float dt)
         walk_x = 0;
 
     //rotation
-    if(pressed_keys[5])
-        turn = turn_speed * dt;
-    else if(pressed_keys[4])
-        turn = -turn_speed * dt;
-    else
+    if(abs(turn) < turn_max)
+    {
+        if(pressed_keys[5])
+            turn += turn_accel * dt;
+        else if(pressed_keys[4])
+            turn -= turn_accel * dt;
+    }
+    if((!pressed_keys[5] && turn > 0) || (!pressed_keys[4] && turn < 0))
         turn = 0;
 
-    angle += float(turn) * 0.05;
+    angle += turn;
     float nx = x + (walk_y * cos(angle) + walk_x * cos(angle + M_PI / 2.0)) * 0.1;
     float ny = y + (walk_y * sin(angle) + walk_x * sin(angle + M_PI / 2.0)) * 0.1;
+
     if(angle > M_PI)
         angle -= 2 * M_PI;
     if(angle < -M_PI)   
         angle += 2 * M_PI;
 
-    if (int(nx) >= 0 && int(nx) < mapw && int(ny) >= 0 && int(ny) < maph && map[int(nx) + int(ny) * mapw] == ' ')
+    if (int(nx) >= 0 && int(nx) < map->w && int(ny) >= 0 && int(ny) < map->h && map->get_tile(ushort(nx), ushort(ny)) == ' ')
     {
         x = nx;
         y = ny;
     }
-
-    //if(map[int(nx) + int(ny) * mapw] != ' ')
-    //    map[int(nx) + int(ny) * mapw] = ' ';
 }
 
 void Player::update_key(SDLKey key, bool state)
@@ -83,7 +88,42 @@ void Player::update_key(SDLKey key, bool state)
 
 void Player::Fire()
 {
+    std::vector<Sprite> sprites = map->get_sprites();
 
+    float dist = 0;
+    bool hit_wall = false;
+
+    //we don't need to calculate sin and cos for each step
+    float x_offset = cos(angle);
+    float y_offset = sin(angle);
+
+    while(!hit_wall && dist < 10) //makes the ray move forward step by step
+    {
+        dist += 0.1;
+
+        //pos of the tip of the ray for this iteration
+        float ray_x = x + x_offset * dist;
+        float ray_y = y + y_offset * dist;
+
+        if(map->get_tile(ushort(ray_x), ushort(ray_y)) != ' ') //the current tile is not empty, we hit a wall
+        {
+            hit_wall = true;
+            map->set_tile(short(ray_x), ushort(ray_y), ' ');
+        }
+        else
+        {
+            for(unsigned int i = 0; i < sprites.size(); i++)
+            {
+                float sqr_dist = pow(ray_x - sprites.at(i).x, 2) + pow(ray_y - sprites.at(i).y, 2);
+                if(sqr_dist < 0.025)
+                {
+                    map->delete_sprite(i);
+                    hit_wall = true;
+                    break;
+                }
+            }
+        }
+    }
 }
 
 float Player::get_x()

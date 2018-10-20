@@ -3,7 +3,7 @@
 #include <cmath>
 #include "renderer.h"
 
-Renderer::Renderer(Player* p) : sdl_screen(NULL), wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(p)
+Renderer::Renderer(Player* p, Map* m) : sdl_screen(NULL), wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(p), map(m)
 {
     
 }
@@ -74,18 +74,17 @@ void Renderer::draw()
         float projectDist = 0;
 
         //we don't need to calculate sin and cos for each step
-        float cos_angle = cos(ray_angle);
-        float sin_angle = sin(ray_angle);
+        float x_offset = cos(ray_angle);
+        float y_offset = sin(ray_angle);
 
-        while(!hit_wall || dist > 40) //makes the ray move forward step by step
+        while(!hit_wall && dist < 40) //makes the ray move forward step by step
         {
             dist += 0.01;
             //pos of the tip of the ray for this iteration
-            float ray_x = player->get_x() + cos_angle * dist;
-            float ray_y = player->get_y() + sin_angle * dist;
-
-            int tile_id = int(ray_x) + int(ray_y) * mapw; //id of current tile
-            if(map[tile_id] != ' ') //the current tile is not empty, we hit a wall
+            float ray_x = player->get_x() + x_offset * dist;
+            float ray_y = player->get_y() + y_offset * dist;
+            //int tile_id = int(ray_x) + int(ray_y) * map->w; //id of current tile
+            if(map->get_tile(ushort(ray_x), ushort(ray_y)) != ' ') //the current tile is not empty, we hit a wall
             {
                 hit_wall = true;
                 // we need to project the distance onto a flat plane perpendicular to the player
@@ -95,6 +94,8 @@ void Renderer::draw()
                 int wall_height = (height / projectDist);
 
                 zbuffer[i] = dist;
+
+                ushort wall_tex = (map->get_tile(ray_x, ray_y) - '0');
                 
                 ray_x -= floor(ray_x + 0.5);
                 ray_y -= floor(ray_y + 0.5);
@@ -104,8 +105,6 @@ void Renderer::draw()
                 int texture_x = (vertical ? ray_x : ray_y) * wall_textures->h;
                 if(texture_x < 0)
                     texture_x += wall_textures->h;
-
-                int wall_tex = map[tile_id]-'0';
 
                 int wall_top = middle - wall_height / 2;
                 int wall_bottom = wall_top + wall_height;
@@ -124,20 +123,16 @@ void Renderer::draw()
                     }
                 }
             }   
-        } 
-    }
+        }
+    } 
 
-    //TODO : add sorting based on the distance from the player
-    draw_sprite(1, 4.5, 6.5, 600);
-    draw_sprite(1, 3.5, 7.5, 600);
-    draw_sprite(1, 12.5, 2, 600);
-    draw_sprite(1, 6.25, 5.9, 100);
-    draw_sprite(1, 6.5, 5.9, 200);
-    draw_sprite(1, 6.75, 5.9, 300);
-    draw_sprite(1, 7.0, 5.9, 400);
-    draw_sprite(1, 7.25, 5.9, 500);
-    draw_sprite(2, 3.5, 6.5, 300);
-    draw_sprite(2, 9.5, 6.5, 300);
+    //Sprites rendering
+    map->sort_sprites(player->get_x(), player->get_y());
+    std::vector<Sprite> sprites = map->get_sprites();
+    for(int i = 0; i < sprites.size(); i++)
+    {
+        draw_sprite(sprites.at(i));
+    }
 
     //FPS weapon
     int offset = width / 2 + 100;
@@ -154,23 +149,36 @@ void Renderer::draw()
         }
     }
 
+    //draws crosshair
+    int h_middle = width / 2;
+    set_pixel(h_middle, middle, 0);
+    ushort crosshair_size = 8;
+    Uint32 crosshair_color = rgb_to_int(0, 255, 255);
+    for(int i = 1; i < crosshair_size; i++)
+    {
+        set_pixel(h_middle+i, middle, crosshair_color);
+        set_pixel(h_middle-i, middle, crosshair_color);
+        set_pixel(h_middle, middle+i, crosshair_color);
+        set_pixel(h_middle, middle-i, crosshair_color);
+    }
+
     SDL_Flip(sdl_screen);
 }
 
-void Renderer::draw_sprite(ushort itex, float sprite_x, float sprite_y, ushort sprite_size)
+void Renderer::draw_sprite(Sprite s)
 {
     //direction of the sprite in rad
-    float sprite_dir = atan2(-player->get_y() + sprite_y, sprite_x - player->get_x());
+    float sprite_dir = atan2(-player->get_y() + s.y, s.x - player->get_x());
 
     //check if the sprite is in the view cone
     if(abs(sprite_dir - player->get_angle()) > fov / 2.0)
         return;
 
     //calculates sprite size and offset in screen space
-    float sprite_dist = sqrt(pow(player->get_x() - sprite_x, 2) + pow(player->get_y() - sprite_y, 2));
-    int sprite_width = std::min(800, (int)(1 / sprite_dist * sprite_size));
+    float sprite_dist = sqrt(pow(player->get_x() - s.x, 2) + pow(player->get_y() - s.y, 2));
+    int sprite_width = std::min(1000, (int)(1 / sprite_dist * s.size));
     int h_offset = (sprite_dir - player->get_angle()) * sdl_screen->w + (sdl_screen->w / 2) - (sprite_width / 2);
-    int v_offset = 360 - (sprite_size / 2.14);
+    int v_offset = 360 - (s.size / 2.14);
 
     //calculates the bouding box of the sprite so it's easier to calculate afterward
     int middle = sdl_screen->h / 2;
@@ -186,7 +194,7 @@ void Renderer::draw_sprite(ushort itex, float sprite_x, float sprite_y, ushort s
             {
                 int texture_x = (x - h_offset) / (float)(sprite_width) * 128;
                 int texture_y = (y - top) / (float)height * 128;
-                Uint32 pixel = get_pixel_tex(itex, texture_x, texture_y, true);
+                Uint32 pixel = get_pixel_tex(s.itex, texture_x, texture_y, true);
 
                 if(pixel != rgb_to_int(0, 255, 255))
                     set_pixel(x, y, pixel);
@@ -194,21 +202,6 @@ void Renderer::draw_sprite(ushort itex, float sprite_x, float sprite_y, ushort s
         }
     }
 }
-
-/*
-void Renderer::display_framerate(ushort fps)
-{
-    TTF_Init();
-    std::string text = std::to_string(fps) + " FPS";
-    TTF_Font *font = TTF_OpenFont("FreeSans.ttf", 28);
-    SDL_Color color = {0, 0, 0};
-    SDL_Surface display = TTF_RenderText_Solid(font, text, color);
-    SDL_Rect pos;
-    pos.x = 10;
-    pos.y = 10;
-    SDL_BlitSurface(display, NULL, sdl_screen, &pos);
-}
-*/
 
 void Renderer::clean()
 {
@@ -223,6 +216,7 @@ Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
     SDL_Surface* tex = sprite ? sprites_textures : wall_textures;
     if(x >= tex->h || y >= tex->h) 
         return 0;
+
 
     Uint8 *p = (Uint8 *)tex->pixels + y * tex->pitch + (x + tex->h * itex) * tex->format->BytesPerPixel;
     return p[0] | p[1] << 8 | p[2] << 16; 

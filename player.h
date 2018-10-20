@@ -8,7 +8,7 @@
 class Player
 {
 	public:
-        Player();
+        Player(Map* m);
         void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
         void handle_events(float dt);
         bool wants_to_quit;
@@ -20,11 +20,13 @@ class Player
     private:
         float x, y, angle; //player position and rotation
         float turn, walk_x, walk_y; // player input
-        int speed, turn_speed;
+        float speed, turn_accel, turn_max;
         bool* pressed_keys;
 
         void update_key(SDLKey key, bool state);
         void Fire();
+
+        Map* map;
 };
 
 #endif
