@@ -24,6 +24,7 @@ class Renderer
         Uint32 apply_light(Uint32 color, float factor);
 
         void draw_sprite(Sprite s);
+        void draw_2d_sprite(ushort itex, ushort x, ushort y, float size);
 
         SDL_Surface* sdl_screen;
         SDL_Surface* wall_textures;

@@ -84,7 +84,17 @@ void Renderer::draw()
             float ray_x = player->get_x() + x_offset * dist;
             float ray_y = player->get_y() + y_offset * dist;
             //int tile_id = int(ray_x) + int(ray_y) * map->w; //id of current tile
-            if(map->get_tile(ushort(ray_x), ushort(ray_y)) != ' ') //the current tile is not empty, we hit a wall
+
+            bool valid = false;
+            if(map->get_tile(ushort(ray_x), ushort(ray_y)) == '3') //door
+            {
+                if(ray_y - floor(ray_y) < abs(sin(SDL_GetTicks() / 1000.0)))
+                    valid = true;
+            }
+            else
+                valid = map->get_tile(ushort(ray_x), ushort(ray_y)) != ' '; //the current tile is not empty, we hit a wall
+
+            if(valid)
             {
                 hit_wall = true;
                 // we need to project the distance onto a flat plane perpendicular to the player
@@ -108,6 +118,9 @@ void Renderer::draw()
 
                 int wall_top = middle - wall_height / 2;
                 int wall_bottom = wall_top + wall_height;
+
+                if(wall_tex == 2)
+                    wall_top += (wall_bottom - wall_top) * 0.2;
 
                 for(int j = 0; j < height; j++)
                 {
@@ -136,18 +149,12 @@ void Renderer::draw()
 
     //FPS weapon
     int offset = width / 2 + 100;
-    for(int x = offset; x < offset + 400; x++)
+    if(player->display_flash)
     {
-        for(int y = height - 400; y < height; y++)
-        {
-            int texture_x = (x - offset) / 400.0 * 128;
-            int texture_y = (y - height + 400) / 400.0 * 128;
-            Uint32 pixel = get_pixel_tex(0, texture_x, texture_y, true);
-
-            if(pixel != rgb_to_int(0, 255, 255))
-                set_pixel(x, y, pixel);
-        }
+        draw_2d_sprite(3, offset, height - 400, 400.0);
+        player->display_flash = false;
     }
+    draw_2d_sprite(0, offset, height - 400, 400.0);
 
     //draws crosshair
     int h_middle = width / 2;
@@ -199,6 +206,22 @@ void Renderer::draw_sprite(Sprite s)
                 if(pixel != rgb_to_int(0, 255, 255))
                     set_pixel(x, y, pixel);
             }
+        }
+    }
+}
+
+void Renderer::draw_2d_sprite(ushort itex, ushort x, ushort y, float size)
+{
+    for(int i = x; i < x + size; i++)
+    {
+        for(int j = y; j < y + size; j++)
+        {
+            int texture_x = (i - x) / size * 128;
+            int texture_y = (j - y) / size * 128;
+            Uint32 pixel = get_pixel_tex(itex, texture_x, texture_y, true);
+
+            if(pixel != rgb_to_int(0, 255, 255))
+                set_pixel(i, j, pixel);
         }
     }
 }

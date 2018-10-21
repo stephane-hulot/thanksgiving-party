@@ -3,8 +3,8 @@
 #include <cmath>
 #include "player.h"
 
-Player::Player(Map* m) : wants_to_quit(false), x(3), y(3), angle(0), turn(0), walk_x(0), walk_y(0),
-    speed(30), turn_accel(0.18), turn_max(0.06), pressed_keys(NULL), map(m)
+Player::Player(Map* m) : wants_to_quit(false), display_flash(false), x(3), y(3), angle(0), turn(0),
+    walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.06), pressed_keys(NULL), map(m)
 {
     pressed_keys = new bool[7];
     for(int i = 0; i < 7; i++)
@@ -60,18 +60,20 @@ void Player::handle_events(float dt)
         turn = 0;
 
     angle += turn;
-    float nx = x + (walk_y * cos(angle) + walk_x * cos(angle + M_PI / 2.0)) * 0.1;
-    float ny = y + (walk_y * sin(angle) + walk_x * sin(angle + M_PI / 2.0)) * 0.1;
-
     if(angle > M_PI)
         angle -= 2 * M_PI;
     if(angle < -M_PI)   
         angle += 2 * M_PI;
 
-    if (int(nx) >= 0 && int(nx) < map->w && int(ny) >= 0 && int(ny) < map->h && map->get_tile(ushort(nx), ushort(ny)) == ' ')
+    float nx = x + (walk_y * cos(angle) + walk_x * cos(angle + M_PI / 2.0)) * 0.1;
+    float ny = y + (walk_y * sin(angle) + walk_x * sin(angle + M_PI / 2.0)) * 0.1;
+
+    if(int(nx) >= 0 && int(nx) < map->w && int(ny) >= 0 && int(ny) < map->h)
     {
-        x = nx;
-        y = ny;
+        if(map->get_tile(ushort(nx), ushort(y)) == ' ')
+            x = nx;
+        if(map->get_tile(ushort(x), ushort(ny)) == ' ')
+            y = ny;
     }
 }
 
@@ -108,7 +110,7 @@ void Player::Fire()
         if(map->get_tile(ushort(ray_x), ushort(ray_y)) != ' ') //the current tile is not empty, we hit a wall
         {
             hit_wall = true;
-            map->set_tile(short(ray_x), ushort(ray_y), ' ');
+            //map->set_tile(short(ray_x), ushort(ray_y), ' ');
         }
         else
         {
@@ -124,6 +126,8 @@ void Player::Fire()
             }
         }
     }
+
+    display_flash = true;
 }
 
 float Player::get_x()
