@@ -28,6 +28,7 @@ int main()
             std::cout<<fps<<" FPS"<<std::endl;
         }
 
+        map.update_ai(player->get_x(), player->get_y());
         player->handle_events(dt);
         renderer->draw();
     }

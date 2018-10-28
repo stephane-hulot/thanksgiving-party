@@ -88,7 +88,8 @@ void Renderer::draw()
             bool valid = false;
             if(map->get_tile(ushort(ray_x), ushort(ray_y)) == '3') //door
             {
-                if(ray_y - floor(ray_y) < abs(sin(SDL_GetTicks() / 1000.0)))
+                //std::cout<<sin(float(SDL_GetTicks()) / 1000.0)<<'-';
+                if(ray_y - floor(ray_y) < sin(SDL_GetTicks() / 1000.0))
                     valid = true;
             }
             else
@@ -142,7 +143,7 @@ void Renderer::draw()
     //Sprites rendering
     map->sort_sprites(player->get_x(), player->get_y());
     std::vector<Sprite> sprites = map->get_sprites();
-    for(int i = 0; i < sprites.size(); i++)
+    for(unsigned int i = 0; i < sprites.size(); i++)
     {
         draw_sprite(sprites.at(i));
     }
@@ -229,7 +230,8 @@ void Renderer::draw_2d_sprite(ushort itex, ushort x, ushort y, float size)
 void Renderer::clean()
 {
     if(sdl_screen) SDL_FreeSurface(sdl_screen);
-    if(wall_textures) SDL_FreeSurface(wall_textures  );
+    if(wall_textures) SDL_FreeSurface(wall_textures);
+    if(sprites_textures) SDL_FreeSurface(sprites_textures);
     SDL_Quit();
 }
 

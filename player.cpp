@@ -4,7 +4,7 @@
 #include "player.h"
 
 Player::Player(Map* m) : wants_to_quit(false), display_flash(false), x(3), y(3), angle(0), turn(0),
-    walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.06), pressed_keys(NULL), map(m)
+    walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(m)
 {
     pressed_keys = new bool[7];
     for(int i = 0; i < 7; i++)
@@ -49,7 +49,7 @@ void Player::handle_events(float dt)
         walk_x = 0;
 
     //rotation
-    if(abs(turn) < turn_max)
+    if(fabs(turn) < turn_max)
     {
         if(pressed_keys[5])
             turn += turn_accel * dt;
@@ -110,14 +110,15 @@ void Player::Fire()
         if(map->get_tile(ushort(ray_x), ushort(ray_y)) != ' ') //the current tile is not empty, we hit a wall
         {
             hit_wall = true;
-            //map->set_tile(short(ray_x), ushort(ray_y), ' ');
+            if(map->get_tile(ushort(ray_x), ushort(ray_y)) == '2')
+                map->set_tile(short(ray_x), ushort(ray_y), ' ');
         }
         else
         {
             for(unsigned int i = 0; i < sprites.size(); i++)
             {
                 float sqr_dist = pow(ray_x - sprites.at(i).x, 2) + pow(ray_y - sprites.at(i).y, 2);
-                if(sqr_dist < 0.025)
+                if(sqr_dist < 0.015)
                 {
                     map->delete_sprite(i);
                     hit_wall = true;

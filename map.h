@@ -64,6 +64,7 @@ class Map
 		void sort_sprites(float player_x, float player_y);
 		std::vector<Sprite> get_sprites();
 		void delete_sprite(unsigned short id);
+		void update_ai(float player_x, float player_y);
 
 	private:
 		char* map;

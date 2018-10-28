@@ -5,7 +5,7 @@
 
 Map::Map() : map(nullptr)
 {
-	map = new char[32*32+33];
+	map = new char[32*32+1];
 
 	for(int i = 0; i < h; i++)
 	{
@@ -68,4 +68,88 @@ std::vector<Sprite> Map::get_sprites()
 void Map::delete_sprite(unsigned short id)
 {
 	sprites.erase(sprites.begin() + id);
+}
+
+void Map::update_ai(float player_x, float player_y)
+{
+	int px = ushort(player_x);
+	int py = ushort(player_y);
+
+	int dist[32*32+1];
+	int origine = px+py*w;
+
+
+	for(int i = 0; i < h; i++)
+	{
+		for(int j = 0; j < w; j++)
+		{
+			dist[j * w + i] = 1000;
+		}
+	}
+
+
+
+	
+	for(unsigned int i = 0; i < sprites.size(); i++)
+	{
+		sprites.at(i).sqr_dist = pow(px - sprites.at(i).x, 2) + pow(py - sprites.at(i).y, 2);
+	}
+	
+
+	dist[origine] = 0;
+	for (int iter=0; iter<20; iter++) {
+		for (int j=0; j<h; j++) {
+			for (int i=0; i<w; i++) {
+				int idx = i+j*w;
+				if (map[idx]!=' ') continue;
+				for (int i=-1; i<=1; i++) {
+					for (int j=-1; j<=1; j++) {
+						int tidx = idx+i+j*w;
+						if (i*j || !(i||j) || map[tidx]!=' ' || dist[tidx]<= dist[idx]) continue;
+						dist[tidx] = dist[idx]+1;
+					}
+				}
+			}
+		}
+	}
+
+	/*for(int i = 0; i < h; i++)
+	{
+		for(int j = 0; j < w; j++)
+		{
+			if(dist[j * w + i] >= 10)
+				std::cout<<'-';
+			else
+				std::cout<<dist[j * w + i];
+		}
+		std::cout<<std::endl;
+	}*/
+
+	for(unsigned int i = 0; i < sprites.size(); i++)
+	{
+
+		ushort x = ushort(sprites.at(i).x);
+		ushort y = ushort(sprites.at(i).y);
+
+		int d = dist[x+y*w];
+
+		if(d > dist[x+(y-1)*w])
+		{
+			sprites.at(i).y -= 0.1;
+		}
+		else if(d > dist[x+(y+1)*w])
+		{
+			sprites.at(i).y += 0.1;
+		}
+		else if(d > dist[(x+1)+y*w])
+		{
+			sprites.at(i).x += 0.1;
+		}
+		else if(d > dist[(x-1)+y*w])
+		{
+			sprites.at(i).x -= 0.1;
+		}
+
+
+	}
 }
