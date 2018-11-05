@@ -53,6 +53,11 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
 
     zbuffer = new float[(int)sdl_screen->w];
 
+    std::cout<<"Rouge:"<<rgb_to_int(255, 0, 0);
+    std::cout<<" - Vert:"<<rgb_to_int(0, 255, 0);
+    std::cout<<" - Bleu:"<<rgb_to_int(0, 0, 255);
+    std::cout<<" - Jaune:"<<rgb_to_int(255, 255, 0);
+
     return true;
 }
 
