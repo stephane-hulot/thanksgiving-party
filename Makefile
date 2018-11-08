@@ -1,7 +1,7 @@
 SYSCONF_LINK = g++
 CPPFLAGS     = -Wall -Wextra -Weffc++ -pedantic -std=c++11 -O3
 LDFLAGS      = 
-LIBS         = -lSDL -lm
+LIBS         = -lSDL2 -lm
 
 DESTDIR = ./
 TARGET  = main

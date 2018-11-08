@@ -1,8 +1,7 @@
 #ifndef _RENDERER_H_
 #define _RENDERER_H_
 
-#include <cmath>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include "player.h"
 #include "map.h"
 
@@ -26,7 +25,13 @@ class Renderer
         void draw_sprite(Sprite s);
         void draw_2d_sprite(ushort itex, ushort x, ushort y, float size);
 
-        SDL_Surface* sdl_screen;
+        SDL_Window* window;
+        SDL_Renderer* sdl_renderer;
+        SDL_Texture* render_texture;
+        Uint32* pixels;
+        ushort screen_w;
+        ushort screen_h;
+
         SDL_Surface* wall_textures;
         SDL_Surface* sprites_textures;
         float* zbuffer;

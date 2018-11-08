@@ -1,4 +1,3 @@
-#include <SDL/SDL.h>
 #include <iostream>
 #include <cmath>
 #include "player.h"
@@ -77,7 +76,7 @@ void Player::handle_events(float dt)
     }
 }
 
-void Player::update_key(SDLKey key, bool state)
+void Player::update_key(SDL_Keycode key, bool state)
 {
     if (key == 'z') pressed_keys[0] = state;
     else if (key == 'q') pressed_keys[1] = state;
@@ -117,6 +116,7 @@ void Player::Fire()
         {
             for(unsigned int i = 0; i < sprites.size(); i++)
             {
+                if(sprites.at(i).type != 1) continue;
                 float sqr_dist = pow(ray_x - sprites.at(i).x, 2) + pow(ray_y - sprites.at(i).y, 2);
                 if(sqr_dist < 0.015)
                 {

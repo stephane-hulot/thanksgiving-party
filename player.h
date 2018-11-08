@@ -1,8 +1,7 @@
 #ifndef _PLAYER_H_
 #define _PLAYER_H_
 
-#include <cmath>
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include "map.h"
 
 class Player
@@ -23,7 +22,7 @@ class Player
         float speed, turn_accel, turn_max;
         bool* pressed_keys;
 
-        void update_key(SDLKey key, bool state);
+        void update_key(SDL_Keycode key, bool state);
         void Fire();
 
         Map* map;

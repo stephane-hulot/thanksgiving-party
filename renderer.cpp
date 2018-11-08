@@ -1,9 +1,9 @@
-#include <SDL/SDL.h>
 #include <iostream>
 #include <cmath>
 #include "renderer.h"
 
-Renderer::Renderer(Player* p, Map* m) : sdl_screen(NULL), wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(p), map(m)
+Renderer::Renderer(Player* p, Map* m) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL), screen_w(0), screen_h(0),
+     wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(p), map(m)
 {
     
 }
@@ -19,12 +19,16 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
         return false;
     }
 
-    SDL_WM_SetCaption(title, NULL);
-    sdl_screen = SDL_SetVideoMode(width, height, 8 * bpp, 0);
+    window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, 0);
+    sdl_renderer = SDL_CreateRenderer(window, -1, 0);
+    render_texture = SDL_CreateTexture(sdl_renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    screen_w = width;
+    screen_h = height;
+    pixels = new Uint32[screen_w * screen_h];
 
-    if(!sdl_screen)
+    if(!window || !sdl_renderer || !render_texture)
     {
-        std::cerr << "SDL_SetVideoMode failed, SDL_GetError()=" << SDL_GetError() << std::endl;
+        std::cerr << "SDL Renderer init failed, SDL_GetError()=" << SDL_GetError() << std::endl;
         return false;
     }
 
@@ -51,28 +55,25 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
         return false;
     }
 
-    zbuffer = new float[(int)sdl_screen->w];
+    zbuffer = new float[screen_w];
 
     std::cout<<"Rouge:"<<rgb_to_int(255, 0, 0);
     std::cout<<" - Vert:"<<rgb_to_int(0, 255, 0);
     std::cout<<" - Bleu:"<<rgb_to_int(0, 0, 255);
     std::cout<<" - Jaune:"<<rgb_to_int(255, 255, 0);
+    std::cout<<" - Cyan:"<<rgb_to_int(0, 255, 255);
 
     return true;
 }
 
 void Renderer::draw()
 {
-    SDL_FillRect(sdl_screen, NULL, SDL_MapRGB(sdl_screen->format, 255, 255, 255)); // TODO check for bpp
+    int middle = screen_h / 2;
 
-    int width = sdl_screen->w; //screen width
-    int height = sdl_screen->h; //screen height
-    int middle = height / 2;
-
-    for(int i = 0; i < width; i++) //for each vertical line of pixel
+    for(int i = 0; i < screen_w; i++) //for each vertical line of pixel
     {
         //angle of the ray in rad
-        float ray_angle = (1.0 - i / float(width)) * (player->get_angle() - fov / 2.0) + i / float(width) * (player->get_angle() + fov / 2.0);
+        float ray_angle = (1.0 - i / float(screen_w)) * (player->get_angle() - fov / 2.0) + i / float(screen_w) * (player->get_angle() + fov / 2.0);
 
         float dist = 0;
         bool hit_wall = false;
@@ -84,7 +85,7 @@ void Renderer::draw()
 
         while(!hit_wall && dist < 40) //makes the ray move forward step by step
         {
-            dist += 0.01;
+            dist += 0.02;
             //pos of the tip of the ray for this iteration
             float ray_x = player->get_x() + x_offset * dist;
             float ray_y = player->get_y() + y_offset * dist;
@@ -107,7 +108,7 @@ void Renderer::draw()
                 //in order to avoid fisheye effect
                 projectDist = dist * cos(ray_angle - player->get_angle());
                 // height of the current vertical segment to draw
-                int wall_height = (height / projectDist);
+                int wall_height = (screen_h / projectDist) * 1.2;
 
                 zbuffer[i] = dist;
 
@@ -128,12 +129,12 @@ void Renderer::draw()
                 if(wall_tex == 2)
                     wall_top += (wall_bottom - wall_top) * 0.2;
 
-                for(int j = 0; j < height; j++)
+                for(int j = 0; j < screen_h; j++)
                 {
                     if(j < wall_top) //draw sky (top : 0,50,200 ; bottom : 150,200,200)
-                        set_pixel(i, j, rgb_to_int(150 * (j / (float)height * 2), 50 + 150 * (j / (float)height * 2), 200));
+                        set_pixel(i, j, rgb_to_int(150 * (j / (float)screen_h * 2), 50 + 150 * (j / (float)screen_h * 2), 200));
                     else if(j >= wall_bottom) //draw ground (top : 0,100,0 ; bottom : 100,200,0)
-                        set_pixel(i, j, rgb_to_int(100 - 100 * ((height - j) / (float)height * 2), 200 - 100 * ((height - j) / (float)height * 2), 0));
+                        set_pixel(i, j, rgb_to_int(100 - 100 * ((screen_h - j) / (float)screen_h * 2), 200 - 100 * ((screen_h - j) / (float)screen_h * 2), 0));
                     else //top < j < bottom, draw wall
                     {
                         int texture_y = (j - wall_top) / (float)wall_height * wall_textures->h;
@@ -154,28 +155,31 @@ void Renderer::draw()
     }
 
     //FPS weapon
-    int offset = width / 2 + 100;
+    int offset = screen_w / 2 + 100;
     if(player->display_flash)
     {
-        draw_2d_sprite(3, offset, height - 400, 400.0);
+        draw_2d_sprite(3, offset, screen_h - 400, 400.0);
         player->display_flash = false;
     }
-    draw_2d_sprite(0, offset, height - 400, 400.0);
+    draw_2d_sprite(0, offset, screen_h - 400, 400.0);
 
     //draws crosshair
-    int h_middle = width / 2;
-    set_pixel(h_middle, middle, 0);
+    int center = screen_w / 2;
+    middle += 30;
+    set_pixel(center, middle, 0);
     ushort crosshair_size = 8;
     Uint32 crosshair_color = rgb_to_int(0, 255, 255);
     for(int i = 1; i < crosshair_size; i++)
     {
-        set_pixel(h_middle+i, middle, crosshair_color);
-        set_pixel(h_middle-i, middle, crosshair_color);
-        set_pixel(h_middle, middle+i, crosshair_color);
-        set_pixel(h_middle, middle-i, crosshair_color);
+        set_pixel(center+i, middle, crosshair_color);
+        set_pixel(center-i, middle, crosshair_color);
+        set_pixel(center, middle+i, crosshair_color);
+        set_pixel(center, middle-i, crosshair_color);
     }
 
-    SDL_Flip(sdl_screen);
+    SDL_UpdateTexture(render_texture, NULL, pixels, screen_w * sizeof(Uint32));
+    SDL_RenderCopy(sdl_renderer, render_texture, NULL, NULL);
+    SDL_RenderPresent(sdl_renderer);
 }
 
 void Renderer::draw_sprite(Sprite s)
@@ -190,11 +194,11 @@ void Renderer::draw_sprite(Sprite s)
     //calculates sprite size and offset in screen space
     float sprite_dist = sqrt(pow(player->get_x() - s.x, 2) + pow(player->get_y() - s.y, 2));
     int sprite_width = std::min(1000, (int)(1 / sprite_dist * s.size));
-    int h_offset = (sprite_dir - player->get_angle()) * sdl_screen->w + (sdl_screen->w / 2) - (sprite_width / 2);
-    int v_offset = 360 - (s.size / 2.14);
+    int h_offset = (sprite_dir - player->get_angle()) * screen_w + (screen_w / 2) - (sprite_width / 2);
+    int v_offset = 400 - (s.size / 3);
 
     //calculates the bouding box of the sprite so it's easier to calculate afterward
-    int middle = sdl_screen->h / 2;
+    int middle = screen_h / 2;
     int top = middle - sprite_width / 2 + v_offset / sprite_dist;
     int bottom = middle + sprite_width / 2 + v_offset / sprite_dist;
     float height = bottom - top;
@@ -234,7 +238,7 @@ void Renderer::draw_2d_sprite(ushort itex, ushort x, ushort y, float size)
 
 void Renderer::clean()
 {
-    if(sdl_screen) SDL_FreeSurface(sdl_screen);
+    //if(sdl_screen) SDL_FreeSurface(sdl_screen);
     if(wall_textures) SDL_FreeSurface(wall_textures);
     if(sprites_textures) SDL_FreeSurface(sprites_textures);
     SDL_Quit();
@@ -247,7 +251,6 @@ Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
     if(x >= tex->h || y >= tex->h) 
         return 0;
 
-
     Uint8 *p = (Uint8 *)tex->pixels + y * tex->pitch + (x + tex->h * itex) * tex->format->BytesPerPixel;
     return p[0] | p[1] << 8 | p[2] << 16; 
 }
@@ -256,15 +259,10 @@ Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
 //sets a pixel on the screen
 void Renderer::set_pixel(ushort x, ushort y, Uint32 pixel)
 {
-    if (x >= sdl_screen->w || y >= sdl_screen->h)
+    if (x >= screen_w || y >= screen_h)
         return;
-
-    unsigned char bpp = sdl_screen->format->BytesPerPixel;
-    Uint8 *p = (Uint8 *)sdl_screen->pixels + y * sdl_screen->pitch + x * bpp;
-    for(unsigned char i = 0; i < bpp; i++)
-    {
-        p[i] = ((Uint8*)&pixel)[i];
-    }
+    
+    pixels[x+screen_w*y] = pixel;
 }
 
 Uint32 Renderer::rgb_to_int(unsigned char r, unsigned char g, unsigned char b)

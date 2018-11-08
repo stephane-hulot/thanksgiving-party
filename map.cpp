@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "map.h"
 
-Map::Map() : map(nullptr)
+Map::Map() : map(nullptr), dist(nullptr)
 {
 	SDL_Surface* map_tex = SDL_LoadBMP("map.bmp");
 
@@ -23,6 +23,7 @@ Map::Map() : map(nullptr)
     h = map_tex->h;
 
     map = new char[w*h];
+    dist = new ushort[w*h];
 
 	for(ushort y = 0; y < h; y++)
 	{
@@ -45,10 +46,26 @@ Map::Map() : map(nullptr)
 				
 				unsigned int index = sprites.size();
 				sprites.push_back(Sprite());
-				sprites.at(index).x = x + ((id * 50) % 100) / 100.0;
-				sprites.at(index).y = y + ((id * 20) % 100) / 100.0;
+				sprites.at(index).x = x + (std::rand() % 100) / 100.0;
+				sprites.at(index).y = y + (std::rand() % 100) / 100.0;
 				sprites.at(index).itex = 1;
+				sprites.at(index).type = 1; //enemy type
 				sprites.at(index).size = 500 + ((id * 50) % 100);
+			}
+			else if(pixel == 65535) //cyan 0,255,255
+			{
+				map[id] = ' ';
+
+				for(int i = 0; i < 6; i++)
+				{
+					unsigned int index = sprites.size();
+					sprites.push_back(Sprite());
+					sprites.at(index).x = x + (std::rand() % 100) / 100.0;
+					sprites.at(index).y = y + (std::rand() % 100) / 100.0;
+					sprites.at(index).itex = 2;
+					sprites.at(index).type = 0;
+					sprites.at(index).size = 200 + ((id * 50) % 100);
+				}
 			}
 			else
 				map[id] = ' ';
@@ -59,6 +76,8 @@ Map::Map() : map(nullptr)
 	}
 	std::cout<<"Niveau chargé avec "<<sprites.size()<<" sprites"<<std::endl;
 	SDL_FreeSurface(map_tex);
+
+	update_dist_map(2, 2);
 }
 
 char Map::get_tile(ushort x, ushort y)
@@ -101,57 +120,16 @@ void Map::update_ai(float player_x, float player_y)
 	//player position
 	int px = ushort(player_x);
 	int py = ushort(player_y);
-
-	//initialise the distance map
-	int dist[32*32];
-	for(int i = 0; i < h; i++)
-	{
-		for(int j = 0; j < w; j++)
-		{
-			dist[j * w + i] = 1000;
-		}
-	}
-
-	dist[px+py*w] = 0; //sets player's distance to 0
-	for (int iter = 0; iter < 10; iter++)
-	{
-		for (int y = 0; y < h; y++)
-		{
-			for (int x = 0; x < w; x++)
-			{
-				int idx = x + y * w;
-				if(map[idx] != ' ') continue;
-				//for each neighbor
-				for (int i = -1; i <= 1; i++)
-				{
-					for (int j =- 1; j<= 1; j++)
-					{
-						int tidx = idx + i + j * w;
-						if (i == j || map[tidx] != ' ' || dist[tidx] <= dist[idx]) continue;
-						dist[tidx] = dist[idx]+1;
-					}
-				}				
-			}
-		}
-	}
-
-	/*
-	for(int i = 0; i < h; i++)
-	{
-		for(int j = 0; j < w; j++)
-		{
-			int idx = i + j * w;
-			std::cout<<(char)(dist[idx] > 9 ? '-' : dist[idx] + '0');
-		}
-		std::cout<<std::endl;
-	}
-	*/
+	if(dist[px+py*w] != 0)
+		update_dist_map(px, py);
 
 	//enemy speed
 	float speed = 0.03;
 
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
+		if(sprites.at(i).type != 1) continue;
+
 		ushort x = ushort(sprites.at(i).x);
 		ushort y = ushort(sprites.at(i).y);
 
@@ -174,6 +152,54 @@ void Map::update_ai(float player_x, float player_y)
 			sprites.at(i).x -= speed;
 		}
 	}
+}
+
+void Map::update_dist_map(ushort px, ushort py)
+{
+	//initialize the distance map
+	for(int i = 0; i < h; i++)
+	{
+		for(int j = 0; j < w; j++)
+		{
+			dist[j * w + i] = 1000;
+		}
+	}
+
+	//all for neighbors
+	int nx[4] = {0, -1, 1, 0};
+	int ny[4] = {-1, 0, 0, 1};
+
+	dist[px+py*w] = 0; //sets player's distance to 0
+	for (int iter = 0; iter < 10; iter++)
+	{
+		for (int y = 0; y < h; y++)
+		{
+			for (int x = 0; x < w; x++)
+			{
+				int idx = x + y * w;
+				if(map[idx] != ' ') continue;
+				//for each neighbor
+				for(int i = 0; i < 4; i++)
+				{
+					int tidx = idx + nx[i] + ny[i] * w;
+					if(map[tidx] == ' ' && dist[tidx] > dist[idx])
+						dist[tidx] = dist[idx] + 1;
+				}		
+			}
+		}
+	}
+
+	/*
+	for(int i = 0; i < h; i++)
+	{
+		for(int j = 0; j < w; j++)
+		{
+			int idx = i + j * w;
+			std::cout<<(char)(dist[idx] > 9 ? '-' : dist[idx] + '0');
+		}
+		std::cout<<std::endl;
+	}
+	*/
 }
 
 //Gets a pixel from the texture file

@@ -1,7 +1,7 @@
 #ifndef _MAP_H_
 #define _MAP_H_
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <vector>
 
 struct Sprite
@@ -9,6 +9,7 @@ struct Sprite
 	float x, y = 0;
 	ushort size = 600;
 	ushort itex = 0;
+	ushort type = 0; //0 = decoration, 1 = ennemy
 	//squared distance from the player, it's used to sort sprites so no need to calculate the square root
 	float sqr_dist = 0;
 
@@ -35,8 +36,10 @@ class Map
 
 	private:
 		char* map;
+		ushort* dist;
 		std::vector<Sprite> sprites;
 		Uint32 get_pixel(SDL_Surface* source, ushort x, ushort y);
+		void update_dist_map(ushort px, ushort py);
 };
 
 #endif
