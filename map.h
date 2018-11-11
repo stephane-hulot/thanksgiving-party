@@ -20,6 +20,12 @@ struct Sprite
 	}
 };
 
+struct Door
+{
+	ushort x, y = 0;
+	float animationState = 1; //0 = fully opened, 0.5 = half opened, 1 = fully closed
+};
+
 class Map
 {
 	public:
@@ -33,11 +39,15 @@ class Map
 		std::vector<Sprite> get_sprites();
 		void delete_sprite(ushort id);
 		void update_ai(float player_x, float player_y);
+		Door get_door(ushort x, ushort y);
+		void update_doors(float player_x, float player_y);
+		~Map();
 
 	private:
 		char* map;
 		ushort* dist;
 		std::vector<Sprite> sprites;
+		std::vector<Door> doors;
 		Uint32 get_pixel(SDL_Surface* source, ushort x, ushort y);
 		void update_dist_map(ushort px, ushort py);
 };

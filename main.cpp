@@ -26,16 +26,20 @@ int main()
             lastFPSDisplay = lastTime;
             int fps = 1 / dt;
             std::cout<<fps<<" FPS"<<std::endl;
+
+            //sort sprites only 5 times per seconds
+            map.sort_sprites(player->get_x(), player->get_y());
         }
 
+        map.update_doors(player->get_x(), player->get_y());
         map.update_ai(player->get_x(), player->get_y());
         player->handle_events(dt);
         renderer->draw();
     }
     
-    renderer->clean();
-    delete renderer;
+    //renderer->clean();
     delete player;
+    delete renderer;
     return 0;
 }
 

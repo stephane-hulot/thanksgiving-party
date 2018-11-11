@@ -145,3 +145,9 @@ float Player::get_angle()
 {
     return angle;
 }
+
+Player::~Player()
+{
+    delete pressed_keys;
+    std::cout<<"Player deleted"<<std::endl;
+}

@@ -39,7 +39,15 @@ Map::Map() : map(nullptr), dist(nullptr)
 			else if(pixel == 255) //blue 0,0,255
 				map[id] = '2';
 			else if(pixel == 16776960) //yellow 255,255,0
+			{
 				map[id] = '3';
+
+				unsigned int index = doors.size();
+				doors.push_back(Door());
+				doors.at(index).x = x;
+				doors.at(index).y = y;
+				doors.at(index).animationState = 1;
+			}
 			else if(pixel == 16711680) //red 255,0,0
 			{
 				map[id] = ' ';
@@ -94,6 +102,35 @@ void Map::set_tile(ushort x, ushort y, char tile)
 		return;
 
 	map[y * w + x] = tile; 
+}
+
+Door Map::get_door(ushort x, ushort y)
+{
+	unsigned int i = 0;
+	for(i = 0; i < doors.size() - 1; i++)
+	{
+		if(doors.at(i).x == x && doors.at(i).y == y)
+			break;
+	}
+	return doors.at(i);
+}
+
+void Map::update_doors(float player_x, float player_y)
+{
+	for(unsigned int i = doors.size(); i > 0; i--)
+	{
+		float sqr_dist = pow(player_x - doors.at(i-1).x, 2) + pow(player_y - doors.at(i-1).y, 2);
+		if(sqr_dist < 10)
+		{
+			doors.at(i-1).animationState -= 0.02;
+
+			if(doors.at(i-1).animationState < 0.02)
+			{
+				set_tile(doors.at(i-1).x, doors.at(i-1).y, ' ');
+				doors.erase(doors.begin() + i-1);
+			}
+		}
+	}
 }
 
 void Map::sort_sprites(float player_x, float player_y)
@@ -210,4 +247,11 @@ Uint32 Map::get_pixel(SDL_Surface* source, ushort x, ushort y)
 
     Uint8 *p = (Uint8 *)source->pixels + (y - 1) * source->pitch + (x + h) * source->format->BytesPerPixel;
     return p[0] | p[1] << 8 | p[2] << 16; 
+}
+
+Map::~Map()
+{
+	delete dist;
+	delete map;
+    std::cout<<"Map deleted"<<std::endl;
 }

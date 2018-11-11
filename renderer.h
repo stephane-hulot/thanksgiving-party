@@ -11,9 +11,10 @@ class Renderer
 {
     public:
         Renderer(Player* p, Map* m);
-        void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
+        //void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
         bool init_sdl(const char* title, ushort width, ushort height);
         void draw();
+        ~Renderer();
         
     private:
         void set_pixel(ushort x, ushort y, Uint32 pixel);

@@ -89,13 +89,12 @@ void Renderer::draw()
             //pos of the tip of the ray for this iteration
             float ray_x = player->get_x() + x_offset * dist;
             float ray_y = player->get_y() + y_offset * dist;
-            //int tile_id = int(ray_x) + int(ray_y) * map->w; //id of current tile
 
             bool valid = false;
             if(map->get_tile(ushort(ray_x), ushort(ray_y)) == '3') //door
             {
-                //std::cout<<sin(float(SDL_GetTicks()) / 1000.0)<<'-';
-                if(ray_y - floor(ray_y) < sin(SDL_GetTicks() / 1000.0))
+                Door door = map->get_door(ushort(ray_x), ushort(ray_y));
+                if(ray_y - floor(ray_y) < door.animationState)
                     valid = true;
             }
             else
@@ -104,6 +103,8 @@ void Renderer::draw()
             if(valid)
             {
                 hit_wall = true;
+                ushort tile_id = map->get_tile(ushort(ray_x), ushort(ray_y)) - '0';
+
                 // we need to project the distance onto a flat plane perpendicular to the player
                 //in order to avoid fisheye effect
                 projectDist = dist * cos(ray_angle - player->get_angle());
@@ -111,8 +112,6 @@ void Renderer::draw()
                 int wall_height = (screen_h / projectDist) * 1.2;
 
                 zbuffer[i] = dist;
-
-                ushort wall_tex = (map->get_tile(ray_x, ray_y) - '0');
                 
                 ray_x -= floor(ray_x + 0.5);
                 ray_y -= floor(ray_y + 0.5);
@@ -123,10 +122,19 @@ void Renderer::draw()
                 if(texture_x < 0)
                     texture_x += wall_textures->h;
 
+                /*
+                if(tile_id == 3)
+                {
+                    Door d = map->get_door(tile_id / map->w, tile_id % map->w);
+                    int offset = d.animationState * 10;
+                    texture_x += offset;
+                }
+                */
+
                 int wall_top = middle - wall_height / 2;
                 int wall_bottom = wall_top + wall_height;
 
-                if(wall_tex == 2)
+                if(tile_id == 2)
                     wall_top += (wall_bottom - wall_top) * 0.2;
 
                 for(int j = 0; j < screen_h; j++)
@@ -139,7 +147,7 @@ void Renderer::draw()
                     {
                         int texture_y = (j - wall_top) / (float)wall_height * wall_textures->h;
                         //displays the pixel and apply lighting
-                        set_pixel(i, j, apply_light(get_pixel_tex(wall_tex, texture_x, texture_y), vertical ? 1 : 0.7));
+                        set_pixel(i, j, apply_light(get_pixel_tex(tile_id, texture_x, texture_y), vertical ? 1 : 0.7));
                     }
                 }
             }   
@@ -147,7 +155,6 @@ void Renderer::draw()
     } 
 
     //Sprites rendering
-    map->sort_sprites(player->get_x(), player->get_y());
     std::vector<Sprite> sprites = map->get_sprites();
     for(unsigned int i = 0; i < sprites.size(); i++)
     {
@@ -236,14 +243,6 @@ void Renderer::draw_2d_sprite(ushort itex, ushort x, ushort y, float size)
     }
 }
 
-void Renderer::clean()
-{
-    //if(sdl_screen) SDL_FreeSurface(sdl_screen);
-    if(wall_textures) SDL_FreeSurface(wall_textures);
-    if(sprites_textures) SDL_FreeSurface(sprites_textures);
-    SDL_Quit();
-}
-
 //Gets a pixel from the texture file
 Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
 {
@@ -277,4 +276,18 @@ Uint32 Renderer::apply_light(Uint32 color, float factor)
     Uint32 b = (color & 0x000000FF) * factor;
 
    return (r & 0x00FF0000) | (g & 0x0000FF00) | (b & 0x000000FF);
+}
+
+Renderer::~Renderer()
+{
+    if(render_texture) SDL_DestroyTexture(render_texture);
+    if(sdl_renderer) SDL_DestroyRenderer(sdl_renderer);
+    if(window) SDL_DestroyWindow(window);
+    if(wall_textures) SDL_FreeSurface(wall_textures);
+    if(sprites_textures) SDL_FreeSurface(sprites_textures);
+    delete pixels;
+    delete zbuffer;
+    SDL_Quit();
+
+    std::cout<<"Renderer deleted"<<std::endl;
 }

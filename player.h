@@ -16,6 +16,8 @@ class Player
         float get_y();
         float get_angle();
 
+        ~Player();
+
     private:
         float x, y, angle; //player position and rotation
         float turn, walk_x, walk_y; // player input
