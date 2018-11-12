@@ -18,12 +18,16 @@ struct Sprite
 		//sprites further away are sorted before near sprites
 		return sqr_dist > s.sqr_dist;
 	}
+
+	Sprite() : x(0), y(0), size(600), itex(0), type(0), sqr_dist(0) {}
 };
 
 struct Door
 {
 	ushort x, y = 0;
 	float animationState = 1; //0 = fully opened, 0.5 = half opened, 1 = fully closed
+
+	Door() : x(0), y(0), animationState(1) {}
 };
 
 class Map
@@ -42,6 +46,11 @@ class Map
 		Door get_door(ushort x, ushort y);
 		void update_doors(float player_x, float player_y);
 		~Map();
+
+		//copy constructor to avoid warning in c++11
+        Map(const Map&);
+        Map& operator=(Map m);
+
 
 	private:
 		char* map;

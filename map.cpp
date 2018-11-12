@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "map.h"
 
-Map::Map() : map(nullptr), dist(nullptr)
+Map::Map() : map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
 {
 	SDL_Surface* map_tex = SDL_LoadBMP("map.bmp");
 
@@ -86,6 +86,23 @@ Map::Map() : map(nullptr), dist(nullptr)
 	SDL_FreeSurface(map_tex);
 
 	update_dist_map(2, 2);
+}
+
+Map::Map(const Map& m) : map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
+{
+	map = m.map;
+	w = m.w;
+	h = m.h;
+	dist = new ushort[w*h];
+}
+
+Map& Map::operator=(Map m)
+{
+	map = m.map;
+	w = m.w;
+	h = m.h;
+	dist = new ushort[w*h];
+    return *this;
 }
 
 char Map::get_tile(ushort x, ushort y)

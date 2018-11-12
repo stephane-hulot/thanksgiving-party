@@ -2,10 +2,24 @@
 #include <cmath>
 #include "renderer.h"
 
-Renderer::Renderer(Player* p, Map* m) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL), screen_w(0), screen_h(0),
-     wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(p), map(m)
+Renderer::Renderer(Player* p, Map* m) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL),
+    screen_w(0), screen_h(0), wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(p), map(m)
 {
     
+}
+
+Renderer::Renderer(const Renderer& r) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL),
+    screen_w(0), screen_h(0), wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(NULL), map(NULL)
+{
+    player = r.player;
+    map = r.map;
+}
+
+Renderer& Renderer::operator=(Renderer r)
+{
+    player = r.player;
+    map = r.map;
+    return *this;
 }
 
 bool Renderer::init_sdl(const char* title, ushort width, ushort height)

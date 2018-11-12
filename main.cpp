@@ -37,7 +37,6 @@ int main()
         renderer->draw();
     }
     
-    //renderer->clean();
     delete player;
     delete renderer;
     return 0;

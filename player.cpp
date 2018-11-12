@@ -12,6 +12,18 @@ Player::Player(Map* m) : wants_to_quit(false), display_flash(false), x(3), y(3),
     }
 }
 
+Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), x(3), y(3), angle(0), turn(0),
+    walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(NULL)
+{
+    map = p.map;
+}
+
+Player& Player::operator=(Player p)
+{
+    map = p.map;
+    return *this;
+}
+
 void Player::handle_events(float dt)
 {
     SDL_Event event;

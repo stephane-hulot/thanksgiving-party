@@ -18,6 +18,10 @@ class Player
 
         ~Player();
 
+        //copy constructor to avoid warning in c++11
+        Player(const Player&);
+        Player& operator=(Player p);
+
     private:
         float x, y, angle; //player position and rotation
         float turn, walk_x, walk_y; // player input
