@@ -2,7 +2,6 @@
 #define _PLAYER_H_
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include "map.h"
 
 class Player
@@ -11,13 +10,12 @@ class Player
         Player(Map* m);
         void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
         void handle_events(float dt);
-        bool wants_to_quit, display_flash = false;
+        bool wants_to_quit, display_flash, menu = false;
+        int score = 0;
 
         float get_x();
         float get_y();
         float get_angle();
-
-        int score = 0;
 
         ~Player();
 

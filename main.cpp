@@ -7,6 +7,7 @@ int main()
 {
     uint lastTime = 0;
     uint lastFPSDisplay = 0;
+    int fps = 60;
 
     Map map;
 	Player* player = new Player(&map);
@@ -24,17 +25,16 @@ int main()
         if(lastFPSDisplay + 200 < lastTime)
         {
             lastFPSDisplay = lastTime;
-            int fps = 1 / dt;
-            std::cout<<fps<<" FPS"<<std::endl;
+            fps = 1 / dt;
 
             //sort sprites only 5 times per seconds
             map.sort_sprites(player->get_x(), player->get_y());
         }
 
-        map.update_doors(player->get_x(), player->get_y());
+        map.update_doors(player->get_x(), player->get_y(), dt);
         map.update_ai(player->get_x(), player->get_y());
         player->handle_events(dt);
-        renderer->draw();
+        renderer->draw(fps);
     }
     
     delete player;

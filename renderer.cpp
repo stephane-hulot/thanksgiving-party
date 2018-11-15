@@ -75,7 +75,7 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
     return true;
 }
 
-void Renderer::draw()
+void Renderer::draw(int fps)
 {
     int middle = screen_h / 2;
 
@@ -122,23 +122,21 @@ void Renderer::draw()
 
                 zbuffer[i] = dist;
                 
-                ray_x -= floor(ray_x + 0.5);
-                ray_y -= floor(ray_y + 0.5);
+                float local_ray_x = ray_x - floor(ray_x + 0.5);
+                float local_ray_y = ray_y - floor(ray_y + 0.5);
 
                 // x-texcoord, we need to determine whether we hit a "vertical" or a "horizontal" wall (w.r.t the map)
-                bool vertical = std::abs(ray_x) > std::abs(ray_y);
-                int texture_x = (vertical ? ray_x : ray_y) * wall_textures->h;
+                bool vertical = std::abs(local_ray_x) > std::abs(local_ray_y);
+                int texture_x = (vertical ? local_ray_x : local_ray_y) * wall_textures->h;
                 if(texture_x < 0)
                     texture_x += wall_textures->h;
 
-                /*
                 if(tile_id == 3)
                 {
-                    Door d = map->get_door(tile_id / map->w, tile_id % map->w);
-                    int offset = d.animationState * 10;
+                    Door d = map->get_door(ushort(ray_x), ushort(ray_y));
+                    int offset = wall_textures->h - d.animationState * wall_textures->h;
                     texture_x += offset;
                 }
-                */
 
                 int wall_top = middle - wall_height / 2;
                 int wall_bottom = wall_top + wall_height;
@@ -151,7 +149,7 @@ void Renderer::draw()
                     if(j < wall_top) //draw sky (top : 0,50,200 ; bottom : 150,200,200)
                         set_pixel(i, j, rgb_to_int(150 * (j / (float)screen_h * 2), 50 + 150 * (j / (float)screen_h * 2), 200));
                     else if(j >= wall_bottom) //draw ground (top : 0,100,0 ; bottom : 100,200,0)
-                        set_pixel(i, j, rgb_to_int(100 - 100 * ((screen_h - j) / (float)screen_h * 2), 200 - 100 * ((screen_h - j) / (float)screen_h * 2), 0));
+                        set_pixel(i, j, rgb_to_int(120 - 70 * ((screen_h - j) / (float)screen_h * 2), 150 - 50 * ((screen_h - j) / (float)screen_h * 2), 20));
                     else //top < j < bottom, draw wall
                     {
                         int texture_y = (j - wall_top) / (float)wall_height * wall_textures->h;
@@ -170,35 +168,46 @@ void Renderer::draw()
         draw_sprite(sprites.at(i));
     }
 
-    //FPS weapon
-    int offset = screen_w / 2 + 100;
-    if(player->display_flash)
+    if(!player->menu)
     {
-        draw_2d_sprite(3, offset, screen_h - 400, 400.0);
-        player->display_flash = false;
-    }
-    draw_2d_sprite(0, offset, screen_h - 400, 400.0);
+        //FPS weapon
+        int offset = screen_w / 2 + 100;
+        if(player->display_flash)
+        {
+            draw_2d_sprite(3, offset, screen_h - 400, 400.0);
+            player->display_flash = false;
+        }
+        draw_2d_sprite(0, offset, screen_h - 400, 400.0);
 
-    //draws crosshair
-    int center = screen_w / 2;
-    middle += 30;
-    set_pixel(center, middle, 0);
-    ushort crosshair_size = 8;
-    Uint32 crosshair_color = rgb_to_int(0, 255, 255);
-    for(int i = 1; i < crosshair_size; i++)
-    {
-        set_pixel(center+i, middle, crosshair_color);
-        set_pixel(center-i, middle, crosshair_color);
-        set_pixel(center, middle+i, crosshair_color);
-        set_pixel(center, middle-i, crosshair_color);
+        //draws crosshair
+        int center = screen_w / 2;
+        middle += 30;
+        ushort crosshair_size = 8;
+        Uint32 crosshair_color = rgb_to_int(0, 255, 255);
+        for(int i = 3; i < crosshair_size; i++)
+        {
+            set_pixel(center+i, middle, crosshair_color);
+            set_pixel(center-i, middle, crosshair_color);
+            set_pixel(center, middle+i, crosshair_color);
+            set_pixel(center, middle-i, crosshair_color);
+        }
     }
-
+    else
+        draw_2d_sprite(1, 500, 200, 200);
+    
     SDL_UpdateTexture(render_texture, NULL, pixels, screen_w * sizeof(Uint32));
     SDL_RenderCopy(sdl_renderer, render_texture, NULL, NULL);
 
-    std::string score_text = "SCORE " + std::to_string(player->score); 
-    draw_text(10, 10, score_text, 40);
-
+    if(player->menu)
+    {
+        draw_text(100, 100, "Thanksgiving Party", 100);
+    }
+    else
+    {   
+        std::string score_text = "SCORE " + std::to_string(player->score) + " - " + std::to_string(fps) + "FPS"; 
+        draw_text(10, 10, score_text, 40);
+    }
+    
     SDL_RenderPresent(sdl_renderer);
 
 }
@@ -206,7 +215,11 @@ void Renderer::draw()
 void Renderer::draw_sprite(Sprite s)
 {
     //direction of the sprite in rad
-    float sprite_dir = atan2(-player->get_y() + s.y, s.x - player->get_x());
+    float sprite_dir = atan2(-player->get_y() + s.y, s.x - player->get_x());    
+    if(sprite_dir - player->get_angle() > M_PI)
+        sprite_dir -= 2 * M_PI;
+    if(sprite_dir - player->get_angle() < -M_PI)
+        sprite_dir += 2 * M_PI;
 
     //check if the sprite is in the view cone
     if(abs(sprite_dir - player->get_angle()) > fov / 2.0)
@@ -257,6 +270,33 @@ void Renderer::draw_2d_sprite(ushort itex, ushort x, ushort y, float size)
     }
 }
 
+void Renderer::draw_text(ushort x, ushort y, std::string text, ushort font_size)
+{
+    SDL_Surface *ttf_surface;
+    SDL_Texture *ttf_texture;
+    TTF_Font *font = NULL;
+    SDL_Color ttf_color = {255, 255, 255, 255};
+
+    font = TTF_OpenFont("pixelz.ttf", font_size);
+    ttf_surface = TTF_RenderText_Solid(font, text.c_str(), ttf_color);
+    ttf_texture = SDL_CreateTextureFromSurface(sdl_renderer, ttf_surface);
+
+    int w, h;
+    SDL_QueryTexture(ttf_texture, NULL, NULL, &w, &h);
+
+    SDL_Rect pos;
+    pos.x = x;
+    pos.y = y;
+    pos.w = w;
+    pos.h = h;
+
+    SDL_RenderCopy(sdl_renderer, ttf_texture, NULL, &pos);
+
+    TTF_CloseFont(font);
+    SDL_DestroyTexture(ttf_texture);
+    SDL_FreeSurface(ttf_surface);
+}
+
 //Gets a pixel from the texture file
 Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
 {
@@ -290,33 +330,6 @@ Uint32 Renderer::apply_light(Uint32 color, float factor)
     Uint32 b = (color & 0x000000FF) * factor;
 
    return (r & 0x00FF0000) | (g & 0x0000FF00) | (b & 0x000000FF);
-}
-
-void Renderer::draw_text(ushort x, ushort y, std::string text, ushort font_size)
-{
-    SDL_Surface *ttf_surface;
-    SDL_Texture *ttf_texture;
-    TTF_Font *font = NULL;
-    SDL_Color ttf_color = {255, 255, 255, 255};
-
-    font = TTF_OpenFont("pixelz.ttf", font_size);
-    ttf_surface = TTF_RenderText_Solid(font, text.c_str(), ttf_color);
-    ttf_texture = SDL_CreateTextureFromSurface(sdl_renderer, ttf_surface);
-
-    int w, h;
-    SDL_QueryTexture(ttf_texture, NULL, NULL, &w, &h);
-
-    SDL_Rect pos;
-    pos.x = x;
-    pos.y = y;
-    pos.w = w;
-    pos.h = h;
-
-    SDL_RenderCopy(sdl_renderer, ttf_texture, NULL, &pos);
-
-    TTF_CloseFont(font);
-    SDL_DestroyTexture(ttf_texture);
-    SDL_FreeSurface(ttf_surface);
 }
 
 Renderer::~Renderer()

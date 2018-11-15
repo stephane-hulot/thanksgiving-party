@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
 
-Player::Player(Map* m) : wants_to_quit(false), display_flash(false), score(0), x(3), y(3), angle(0), turn(0),
+Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true), score(0), x(3), y(3), angle(0), turn(0),
     walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(m)
 {
     pressed_keys = new bool[7];
@@ -12,7 +12,7 @@ Player::Player(Map* m) : wants_to_quit(false), display_flash(false), score(0), x
     }
 }
 
-Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), score(0), x(3), y(3), angle(0), turn(0),
+Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), menu(true), score(0), x(3), y(3), angle(0), turn(0),
     walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(NULL)
 {
     map = p.map;
@@ -39,8 +39,19 @@ void Player::handle_events(float dt)
             update_key(event.key.keysym.sym, true);
 
             if(event.key.keysym.sym == SDLK_SPACE)
-                Fire();
+            {
+                if(menu)
+                    menu = false;
+                else
+                    Fire();
+            }
         }
+    }
+
+    if(menu)
+    {
+        angle += dt * 0.1;
+        return;
     }
 
     //Forward - backward movement

@@ -2,15 +2,14 @@
 #define _MAP_H_
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <vector>
 
 struct Sprite
 {
 	float x, y = 0;
-	ushort size = 600;
-	ushort itex = 0;
-	ushort type = 0; //0 = decoration, 1 = ennemy
+	unsigned short size = 600;
+	unsigned short itex = 0;
+	unsigned short type = 0; //0 = decoration, 1 = ennemy
 	//squared distance from the player, it's used to sort sprites so no need to calculate the square root
 	float sqr_dist = 0;
 
@@ -25,7 +24,7 @@ struct Sprite
 
 struct Door
 {
-	ushort x, y = 0;
+	unsigned short x, y = 0;
 	float animationState = 1; //0 = fully opened, 0.5 = half opened, 1 = fully closed
 
 	Door() : x(0), y(0), animationState(1) {}
@@ -35,17 +34,17 @@ class Map
 {
 	public:
         Map();
-        ushort w = 32;
-		ushort h = 32;
+        unsigned short w = 32;
+		unsigned short h = 32;
 		
-		char get_tile(ushort x, ushort y);
-		void set_tile(ushort x, ushort y, char tile);
+		char get_tile(unsigned short x, unsigned short y);
+		void set_tile(unsigned short x, unsigned short y, char tile);
 		void sort_sprites(float player_x, float player_y);
 		std::vector<Sprite> get_sprites();
-		void delete_sprite(ushort id);
+		void delete_sprite(unsigned short id);
 		void update_ai(float player_x, float player_y);
-		Door get_door(ushort x, ushort y);
-		void update_doors(float player_x, float player_y);
+		Door get_door(unsigned short x, unsigned short y);
+		void update_doors(float player_x, float player_y, float dt);
 		~Map();
 
 		//copy constructor to avoid warning in c++11
@@ -55,11 +54,11 @@ class Map
 
 	private:
 		char* map;
-		ushort* dist;
+		unsigned short* dist;
 		std::vector<Sprite> sprites;
 		std::vector<Door> doors;
-		Uint32 get_pixel(SDL_Surface* source, ushort x, ushort y);
-		void update_dist_map(ushort px, ushort py);
+		Uint32 get_pixel(SDL_Surface* source, unsigned short x, unsigned short y);
+		void update_dist_map(unsigned short px, unsigned short py);
 };
 
 #endif

@@ -132,16 +132,16 @@ Door Map::get_door(ushort x, ushort y)
 	return doors.at(i);
 }
 
-void Map::update_doors(float player_x, float player_y)
+void Map::update_doors(float player_x, float player_y, float dt)
 {
 	for(unsigned int i = doors.size(); i > 0; i--)
 	{
 		float sqr_dist = pow(player_x - doors.at(i-1).x, 2) + pow(player_y - doors.at(i-1).y, 2);
 		if(sqr_dist < 10)
 		{
-			doors.at(i-1).animationState -= 0.02;
+			doors.at(i-1).animationState -= dt;
 
-			if(doors.at(i-1).animationState < 0.02)
+			if(doors.at(i-1).animationState < 0.01)
 			{
 				set_tile(doors.at(i-1).x, doors.at(i-1).y, ' ');
 				doors.erase(doors.begin() + i-1);
@@ -192,18 +192,22 @@ void Map::update_ai(float player_x, float player_y)
 		if(d > dist[x+(y-1)*w])
 		{
 			sprites.at(i).y -= speed;
+			sprites.at(i).x += (x - sprites.at(i).x + 0.5) * speed;
 		}
 		else if(d > dist[x+(y+1)*w])
 		{
 			sprites.at(i).y += speed;
+			sprites.at(i).x += (x - sprites.at(i).x + 0.5) * speed;
 		}
 		else if(d > dist[(x+1)+y*w])
 		{
 			sprites.at(i).x += speed;
+			sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed;
 		}
 		else if(d > dist[(x-1)+y*w])
 		{
 			sprites.at(i).x -= speed;
+			sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed;
 		}
 	}
 }
