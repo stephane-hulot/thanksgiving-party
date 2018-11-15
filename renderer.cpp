@@ -71,12 +71,7 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
 
     zbuffer = new float[screen_w];
 
-    std::cout<<"Rouge:"<<rgb_to_int(255, 0, 0);
-    std::cout<<" - Vert:"<<rgb_to_int(0, 255, 0);
-    std::cout<<" - Bleu:"<<rgb_to_int(0, 0, 255);
-    std::cout<<" - Jaune:"<<rgb_to_int(255, 255, 0);
-    std::cout<<" - Cyan:"<<rgb_to_int(0, 255, 255);
-
+    TTF_Init();
     return true;
 }
 
@@ -200,7 +195,12 @@ void Renderer::draw()
 
     SDL_UpdateTexture(render_texture, NULL, pixels, screen_w * sizeof(Uint32));
     SDL_RenderCopy(sdl_renderer, render_texture, NULL, NULL);
+
+    std::string score_text = "SCORE " + std::to_string(player->score); 
+    draw_text(10, 10, score_text, 40);
+
     SDL_RenderPresent(sdl_renderer);
+
 }
 
 void Renderer::draw_sprite(Sprite s)
@@ -292,6 +292,33 @@ Uint32 Renderer::apply_light(Uint32 color, float factor)
    return (r & 0x00FF0000) | (g & 0x0000FF00) | (b & 0x000000FF);
 }
 
+void Renderer::draw_text(ushort x, ushort y, std::string text, ushort font_size)
+{
+    SDL_Surface *ttf_surface;
+    SDL_Texture *ttf_texture;
+    TTF_Font *font = NULL;
+    SDL_Color ttf_color = {255, 255, 255, 255};
+
+    font = TTF_OpenFont("pixelz.ttf", font_size);
+    ttf_surface = TTF_RenderText_Solid(font, text.c_str(), ttf_color);
+    ttf_texture = SDL_CreateTextureFromSurface(sdl_renderer, ttf_surface);
+
+    int w, h;
+    SDL_QueryTexture(ttf_texture, NULL, NULL, &w, &h);
+
+    SDL_Rect pos;
+    pos.x = x;
+    pos.y = y;
+    pos.w = w;
+    pos.h = h;
+
+    SDL_RenderCopy(sdl_renderer, ttf_texture, NULL, &pos);
+
+    TTF_CloseFont(font);
+    SDL_DestroyTexture(ttf_texture);
+    SDL_FreeSurface(ttf_surface);
+}
+
 Renderer::~Renderer()
 {
     if(render_texture) SDL_DestroyTexture(render_texture);
@@ -301,6 +328,8 @@ Renderer::~Renderer()
     if(sprites_textures) SDL_FreeSurface(sprites_textures);
     delete pixels;
     delete zbuffer;
+
+    TTF_Quit();
     SDL_Quit();
 
     std::cout<<"Renderer deleted"<<std::endl;

@@ -2,6 +2,7 @@
 #define _MAP_H_
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <vector>
 
 struct Sprite

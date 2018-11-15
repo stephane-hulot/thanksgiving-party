@@ -2,6 +2,7 @@
 #define _PLAYER_H_
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "map.h"
 
 class Player
@@ -15,6 +16,8 @@ class Player
         float get_x();
         float get_y();
         float get_angle();
+
+        int score = 0;
 
         ~Player();
 

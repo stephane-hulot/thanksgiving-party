@@ -2,6 +2,7 @@
 #define _RENDERER_H_
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include "player.h"
 #include "map.h"
 
@@ -18,6 +19,8 @@ class Renderer
         //copy constructor to avoid warning in c++11
         Renderer(const Renderer&);
         Renderer& operator=(Renderer r);
+
+        void draw_text(ushort x, ushort y, std::string text, ushort font_size);
         
     private:
         void set_pixel(ushort x, ushort y, Uint32 pixel);
