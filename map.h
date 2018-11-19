@@ -45,6 +45,8 @@ class Map
 		void update_ai(float player_x, float player_y);
 		Door get_door(unsigned short x, unsigned short y);
 		void update_doors(float player_x, float player_y, float dt);
+		void animate_sprites();
+		int damage_player();
 		~Map();
 
 		//copy constructor to avoid warning in c++11

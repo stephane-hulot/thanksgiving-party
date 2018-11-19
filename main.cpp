@@ -29,6 +29,8 @@ int main()
 
             //sort sprites only 5 times per seconds
             map.sort_sprites(player->get_x(), player->get_y());
+            map.animate_sprites();
+            player->health -= map.damage_player();
         }
 
         map.update_doors(player->get_x(), player->get_y(), dt);
@@ -36,6 +38,9 @@ int main()
         player->handle_events(dt);
         renderer->draw(fps);
     }
+
+    if(player->health < 1)
+        std::cout<<std::endl<<"GAME OVER"<<std::endl<<std::endl;
     
     delete player;
     delete renderer;

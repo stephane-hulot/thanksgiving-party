@@ -126,7 +126,7 @@ void Renderer::draw(int fps)
                 float local_ray_y = ray_y - floor(ray_y + 0.5);
 
                 // x-texcoord, we need to determine whether we hit a "vertical" or a "horizontal" wall (w.r.t the map)
-                bool vertical = std::abs(local_ray_x) > std::abs(local_ray_y);
+                bool vertical = std::abs(local_ray_x) > std::abs(local_ray_y) && tile_id != 3;
                 int texture_x = (vertical ? local_ray_x : local_ray_y) * wall_textures->h;
                 if(texture_x < 0)
                     texture_x += wall_textures->h;
@@ -204,7 +204,9 @@ void Renderer::draw(int fps)
     }
     else
     {   
-        std::string score_text = "SCORE " + std::to_string(player->score) + " - " + std::to_string(fps) + "FPS"; 
+        std::string score_text = "Score " + std::to_string(player->score)
+            + " - Health : " + std::to_string(player->health)
+            + " - " + std::to_string(fps) + "FPS"; 
         draw_text(10, 10, score_text, 40);
     }
     
@@ -315,7 +317,7 @@ void Renderer::set_pixel(ushort x, ushort y, Uint32 pixel)
     if (x >= screen_w || y >= screen_h)
         return;
     
-    pixels[x+screen_w*y] = pixel;
+    pixels[x + screen_w * y] = pixel;
 }
 
 Uint32 Renderer::rgb_to_int(unsigned char r, unsigned char g, unsigned char b)

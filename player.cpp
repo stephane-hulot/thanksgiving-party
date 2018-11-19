@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
 
-Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true), score(0), x(3), y(3), angle(0), turn(0),
+Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true), score(0), health(100), x(3), y(3), angle(0), turn(0),
     walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(m)
 {
     pressed_keys = new bool[7];
@@ -12,7 +12,7 @@ Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true),
     }
 }
 
-Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), menu(true), score(0), x(3), y(3), angle(0), turn(0),
+Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), menu(true), score(0), health(100), x(3), y(3), angle(0), turn(0),
     walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(NULL)
 {
     map = p.map;
@@ -27,6 +27,7 @@ Player& Player::operator=(Player p)
 void Player::handle_events(float dt)
 {
     SDL_Event event;
+    wants_to_quit = health < 1;
     if (SDL_PollEvent(&event))
     {
         wants_to_quit = SDL_QUIT == event.type || (SDL_KEYDOWN == event.type && SDLK_ESCAPE == event.key.keysym.sym);

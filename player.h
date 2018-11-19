@@ -12,6 +12,7 @@ class Player
         void handle_events(float dt);
         bool wants_to_quit, display_flash, menu = false;
         int score = 0;
+        int health = 100;
 
         float get_x();
         float get_y();

@@ -56,7 +56,7 @@ Map::Map() : map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::v
 				sprites.push_back(Sprite());
 				sprites.at(index).x = x + (std::rand() % 100) / 100.0;
 				sprites.at(index).y = y + (std::rand() % 100) / 100.0;
-				sprites.at(index).itex = 1;
+				sprites.at(index).itex = std::rand() % 2 == 1 ? 1 : 4;
 				sprites.at(index).type = 1; //enemy type
 				sprites.at(index).size = 500 + ((id * 50) % 100);
 			}
@@ -157,6 +157,26 @@ void Map::sort_sprites(float player_x, float player_y)
 		sprites.at(i).sqr_dist = pow(player_x - sprites.at(i).x, 2) + pow(player_y - sprites.at(i).y, 2);
 	}
 	std::sort(sprites.begin(), sprites.end());
+}
+
+int Map::damage_player()
+{
+	int damage = 0;
+	for(unsigned int i = 0; i < sprites.size(); i++)
+	{
+		if(sprites.at(i).type == 1 && sprites.at(i).sqr_dist < 2)
+			damage += 3;
+	}
+	return damage;
+}
+
+void Map::animate_sprites()
+{
+	for(unsigned int i = 0; i < sprites.size(); i++)
+	{
+		if(sprites.at(i).type == 1)
+			sprites.at(i).itex = sprites.at(i).itex == 1 ? 4 : 1;
+	}
 }
 
 std::vector<Sprite> Map::get_sprites()
