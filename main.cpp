@@ -26,18 +26,27 @@ int main()
         {
             lastFPSDisplay = lastTime;
             fps = 1 / dt;
+            std::cout<<fps<<" FPS"<<std::endl;
 
             //sort sprites only 5 times per seconds
             map.sort_sprites(player->get_x(), player->get_y());
             map.animate_sprites();
-            if(player->pause_menu == false) player->health -= map.damage_player();
 
+            if(map.pickup_keys())
+                player->key_count++;
+
+            if(!player->pause)
+                player->health -= map.damage_player();
         }
 
-        map.update_doors(player->get_x(), player->get_y(), dt);
-        map.update_ai(player->get_x(), player->get_y());
+        if(!player->pause && !player->game_over && player->key_count > 0 && map.update_doors(player->get_x(), player->get_y(), dt))
+            player->key_count--;
+        
+        if(!player->pause)
+            map.update_ai(player->get_x(), player->get_y());
+
         player->handle_events(dt);
-        renderer->draw(fps);
+        renderer->draw();
     }
 
     if(player->health < 1)

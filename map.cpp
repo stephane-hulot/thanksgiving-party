@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "map.h"
 
-Map::Map() : speed(0.03), diff_damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
+Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
 {
 	SDL_Surface* map_tex = SDL_LoadBMP("map.bmp");
 
@@ -75,6 +75,18 @@ Map::Map() : speed(0.03), diff_damage(0), map(NULL), dist(NULL), sprites(std::ve
 					sprites.at(index).size = 200 + ((id * 50) % 100);
 				}
 			}
+			else if(pixel == 16711935)
+			{
+				map[id] = ' ';
+
+				unsigned int index = sprites.size();
+				sprites.push_back(Sprite());
+				sprites.at(index).x = x;
+				sprites.at(index).y = y;
+				sprites.at(index).itex = 5;
+				sprites.at(index).type = 2;
+				sprites.at(index).size = 400;
+			}
 			else
 				map[id] = ' ';
 			
@@ -86,14 +98,6 @@ Map::Map() : speed(0.03), diff_damage(0), map(NULL), dist(NULL), sprites(std::ve
 	SDL_FreeSurface(map_tex);
 
 	update_dist_map(2, 2);
-}
-
-Map::Map(const Map& m) : speed(0.03), diff_damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
-{
-	map = m.map;
-	w = m.w;
-	h = m.h;
-	dist = new ushort[w*h];
 }
 
 Map& Map::operator=(Map m)
@@ -132,7 +136,8 @@ Door Map::get_door(ushort x, ushort y)
 	return doors.at(i);
 }
 
-void Map::update_doors(float player_x, float player_y, float dt)
+//returns true if the player opened a door
+bool Map::update_doors(float player_x, float player_y, float dt)
 {
 	for(unsigned int i = doors.size(); i > 0; i--)
 	{
@@ -145,9 +150,14 @@ void Map::update_doors(float player_x, float player_y, float dt)
 			{
 				set_tile(doors.at(i-1).x, doors.at(i-1).y, ' ');
 				doors.erase(doors.begin() + i-1);
+				return true;
 			}
 		}
+		else
+			doors.at(i-1).animationState = 1;
 	}
+
+	return false;
 }
 
 void Map::sort_sprites(float player_x, float player_y)
@@ -155,19 +165,36 @@ void Map::sort_sprites(float player_x, float player_y)
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
 		sprites.at(i).sqr_dist = pow(player_x - sprites.at(i).x, 2) + pow(player_y - sprites.at(i).y, 2);
+
+		if(sprites.at(i).type == 3 && sprites.at(i).start_time + 500 < SDL_GetTicks())
+			delete_sprite(i);
 	}
 	std::sort(sprites.begin(), sprites.end());
 }
 
 int Map::damage_player()
 {
-	int damage = 0;
+	int amount = 0;
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
 		if(sprites.at(i).type == 1 && sprites.at(i).sqr_dist < 2)
-			damage += diff_damage;
+			amount += damage;
 	}
-	return damage;
+	return amount;
+}
+
+bool Map::pickup_keys()
+{
+	for(unsigned int i = sprites.size() - 1; i > 0; i--)
+	{
+		if(sprites.at(i).type == 2 && sprites.at(i).sqr_dist < 2)
+		{
+			delete_sprite(i);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void Map::animate_sprites()
@@ -189,6 +216,17 @@ void Map::delete_sprite(ushort id)
 	sprites.erase(sprites.begin() + id);
 }
 
+void Map::add_temp_sprite(ushort itex, float x, float y, ushort size)
+{
+	unsigned int index = sprites.size();
+	sprites.push_back(Sprite());
+	sprites.at(index).x = x;
+	sprites.at(index).y = y;
+	sprites.at(index).itex = itex;
+	sprites.at(index).type = 3;
+	sprites.at(index).size = size;
+}
+
 void Map::update_ai(float player_x, float player_y)
 {
 	//player position
@@ -196,7 +234,6 @@ void Map::update_ai(float player_x, float player_y)
 	int py = ushort(player_y);
 	if(dist[px+py*w] != 0)
 		update_dist_map(px, py);
-
 
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{

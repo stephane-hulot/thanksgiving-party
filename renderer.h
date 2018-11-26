@@ -13,11 +13,11 @@ class Renderer
     public:
         Renderer(Player* p, Map* m);
         bool init_sdl(const char* title, ushort width, ushort height);
-        void draw(int fps);
+        void draw();
         ~Renderer();
 
         //copy constructor to avoid warning in c++11
-        Renderer(const Renderer&);
+        Renderer(const Renderer& r) : Renderer(r.player, r.map) {};
         Renderer& operator=(Renderer r);
         
     private:
@@ -30,7 +30,7 @@ class Renderer
         void draw_sprite(Sprite s);
         void draw_2d_sprite(ushort itex, ushort x, ushort y, float size);
         void draw_text(ushort x, ushort y, std::string text, ushort font_size, SDL_Color ttf_color);
-        
+
         void menu();
         void pause_menu();
         void game_over();

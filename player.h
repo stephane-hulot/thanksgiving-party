@@ -10,12 +10,14 @@ class Player
         Player(Map* m);
         void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
         void handle_events(float dt);
-        bool wants_to_quit, display_flash, menu = false, pause_menu = false, game_over = false;
+        bool wants_to_quit, display_flash, menu, pause, game_over = false;
+        int menu_select = 0;
+        int difficulty = 0;
         int score = 0;
         int health = 100;
+        ushort key_count = 0;
 
-        int menu_selection = 1;
-        int difficulty_selection = 1;
+        
 
         float get_x();
         float get_y();
@@ -24,7 +26,7 @@ class Player
         ~Player();
 
         //copy constructor to avoid warning in c++11
-        Player(const Player&);
+        Player(const Player& p) : Player(p.map) {};
         Player& operator=(Player p);
 
     private:

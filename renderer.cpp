@@ -8,13 +8,6 @@ Renderer::Renderer(Player* p, Map* m) : window(NULL), sdl_renderer(NULL), render
     
 }
 
-Renderer::Renderer(const Renderer& r) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL),
-    screen_w(0), screen_h(0), wall_textures(NULL), sprites_textures(NULL), zbuffer(NULL), player(NULL), map(NULL)
-{
-    player = r.player;
-    map = r.map;
-}
-
 Renderer& Renderer::operator=(Renderer r)
 {
     player = r.player;
@@ -23,7 +16,7 @@ Renderer& Renderer::operator=(Renderer r)
 }
 
 bool Renderer::init_sdl(const char* title, ushort width, ushort height)
-{   
+{
     //24 bits colors
     unsigned char bpp = 3;
 
@@ -71,11 +64,13 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
 
     zbuffer = new float[screen_w];
 
+    std::cout<<"Magenta"<<rgb_to_int(255, 0, 255);
+
     TTF_Init();
     return true;
 }
 
-void Renderer::draw(int fps)
+void Renderer::draw()
 {
     int middle = screen_h / 2;
 
@@ -168,7 +163,7 @@ void Renderer::draw(int fps)
         draw_sprite(sprites.at(i));
     }
 
-    if(!player->menu)
+    if(!player->menu && !player->game_over)
     {
         //FPS weapon
         int offset = screen_w / 2 + 100;
@@ -177,7 +172,7 @@ void Renderer::draw(int fps)
             draw_2d_sprite(3, offset, screen_h - 400, 400.0);
             player->display_flash = false;
         }
-        if(!player->game_over) draw_2d_sprite(0, offset, screen_h - 400, 400.0);
+        draw_2d_sprite(0, offset, screen_h - 400, 400.0);
 
         //draws crosshair
         int center = screen_w / 2;
@@ -191,13 +186,31 @@ void Renderer::draw(int fps)
             set_pixel(center, middle+i, crosshair_color);
             set_pixel(center, middle-i, crosshair_color);
         }
+
+        //health bar
+        Uint32 color = rgb_to_int(200, 30, 30);
+        Uint32 bg_color = rgb_to_int(30, 0, 0);
+        int hp_height = screen_h - 8 - (player->health * 2.56);
+        for(int i = 8; i < 64; i++)
+        {
+            for(int j = screen_h - 8 - 256; j < screen_h - 8; j++)
+            {
+                set_pixel(i, j, j > hp_height ? color : bg_color);
+            }
+        }
+
+        //keys
+        for(int i = 0; i < player->key_count; i++)
+        {
+            draw_2d_sprite(5, 100 + i * 100, screen_h - 100, 100);
+        }
     }
-    else
+
+    if(player->menu)
         draw_2d_sprite(1, 500, 200, 200);
     
     SDL_UpdateTexture(render_texture, NULL, pixels, screen_w * sizeof(Uint32));
     SDL_RenderCopy(sdl_renderer, render_texture, NULL, NULL);
-
 
     SDL_Color ttf_WhiteColor = {255, 255, 255, 255};
 
@@ -206,7 +219,7 @@ void Renderer::draw(int fps)
         draw_text(100, 100, "Thanksgiving Party", 100, ttf_WhiteColor);
         menu();
     }
-    else if(player->pause_menu)
+    else if(player->pause)
     {
         pause_menu();
     }
@@ -217,8 +230,7 @@ void Renderer::draw(int fps)
     else
     {   
         std::string score_text = "Score " + std::to_string(player->score)
-            + " - Health : " + std::to_string(player->health)
-            + " - " + std::to_string(fps) + "FPS"; 
+            + " - Health : " + std::to_string(player->health);
         draw_text(10, 10, score_text, 40, ttf_WhiteColor);
     }
     
@@ -350,14 +362,14 @@ void Renderer::menu()
     SDL_Color ttf_bananaColor = {209, 182, 6, 255};
     SDL_Color ttf_whiteColor = {255, 255, 255, 255};
 
-    draw_text(500, 400, "PLAY", 60, player->menu_selection == 1 ? ttf_bananaColor : ttf_whiteColor);
-    draw_text(500, 470, "LEVEL :", 60, player->menu_selection == 2 ? ttf_bananaColor : ttf_whiteColor);
-    std::string diff_display = player->difficulty_selection == 1 ? "EASY"
-        : (player->difficulty_selection == 2 ? "MEDIUM" : "HARD");
-    draw_text(770, 470, diff_display, 60, player->menu_selection == 2 ? ttf_bananaColor : ttf_whiteColor);
-    draw_text(500, 540, "QUIT", 60, player->menu_selection == 3 ? ttf_bananaColor : ttf_whiteColor);
+    draw_text(500, 400, "PLAY", 60, player->menu_select == 0 ? ttf_bananaColor : ttf_whiteColor);
+    draw_text(500, 470, "LEVEL :", 60, player->menu_select == 1 ? ttf_bananaColor : ttf_whiteColor);
+    std::string diff_display = player->difficulty == 0 ? "EASY"
+        : (player->difficulty == 1 ? "MEDIUM" : "HARD");
+    draw_text(770, 470, diff_display, 60, player->menu_select == 1 ? ttf_bananaColor : ttf_whiteColor);
+    draw_text(500, 540, "QUIT", 60, player->menu_select == 2 ? ttf_bananaColor : ttf_whiteColor);
 
-    map->diff_damage = player->difficulty_selection == 1 ? 3 : (player->difficulty_selection == 2 ? 6 : 10);
+    map->damage = player->difficulty == 0 ? 2 : (player->difficulty == 1 ? 6 : 10);
 }
 
 void Renderer::pause_menu()
@@ -366,14 +378,13 @@ void Renderer::pause_menu()
     SDL_Color ttf_whiteColor = {255, 255, 255, 255};
 
     draw_text(470, 100, "PAUSE", 100, ttf_whiteColor);
-    draw_text(500, 300, "RESUME", 60, player->menu_selection == 1 ? ttf_bananaColor : ttf_whiteColor);
-    draw_text(500, 370, "QUIT", 60, player->menu_selection == 2 ? ttf_bananaColor : ttf_whiteColor);
+    draw_text(500, 300, "RESUME", 60, player->menu_select == 0 ? ttf_bananaColor : ttf_whiteColor);
+    draw_text(500, 370, "QUIT", 60, player->menu_select == 1 ? ttf_bananaColor : ttf_whiteColor);
 }
 
 void Renderer::game_over()
 {   
     SDL_Color ttf_redColor = {255, 0, 0, 255};
-
     draw_text(380, 200, "GAME OVER", 120, ttf_redColor);
 }
 
