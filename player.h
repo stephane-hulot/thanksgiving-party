@@ -10,9 +10,12 @@ class Player
         Player(Map* m);
         void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
         void handle_events(float dt);
-        bool wants_to_quit, display_flash, menu = false;
+        bool wants_to_quit, display_flash, menu = false, pause_menu = false, game_over = false;
         int score = 0;
         int health = 100;
+
+        int menu_selection = 1;
+        int difficulty_selection = 1;
 
         float get_x();
         float get_y();

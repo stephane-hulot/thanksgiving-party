@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
 
-Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true), score(0), health(100), x(3), y(3), angle(0), turn(0),
+Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true), pause_menu(false), game_over(false), score(0), health(100), menu_selection(1), difficulty_selection(1), x(3), y(3), angle(0), turn(0),
     walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(m)
 {
     pressed_keys = new bool[7];
@@ -12,7 +12,7 @@ Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true),
     }
 }
 
-Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), menu(true), score(0), health(100), x(3), y(3), angle(0), turn(0),
+Player::Player(const Player& p) : wants_to_quit(false), display_flash(false), menu(true), pause_menu(false), game_over(false), score(0), health(100), menu_selection(1), difficulty_selection(1), x(3), y(3), angle(0), turn(0),
     walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(NULL)
 {
     map = p.map;
@@ -27,13 +27,15 @@ Player& Player::operator=(Player p)
 void Player::handle_events(float dt)
 {
     SDL_Event event;
-    wants_to_quit = health < 1;
+    game_over = health < 1;
     if (SDL_PollEvent(&event))
     {
-        wants_to_quit = SDL_QUIT == event.type || (SDL_KEYDOWN == event.type && SDLK_ESCAPE == event.key.keysym.sym);
 
         if(event.type == SDL_KEYUP)
+        {
             update_key(event.key.keysym.sym, false);
+            
+        }
 
         if(event.type == SDL_KEYDOWN)
         {
@@ -41,45 +43,84 @@ void Player::handle_events(float dt)
 
             if(event.key.keysym.sym == SDLK_SPACE)
             {
-                if(menu)
-                    menu = false;
-                else
-                    Fire();
+                if(menu == false && pause_menu == false && game_over == false) Fire();
             }
         }
     }
 
     if(menu)
     {
+        if(event.type == SDL_KEYUP)
+        {
+            if(event.key.keysym.sym == 's' && menu_selection != 3) menu_selection += 1;
+            else if(event.key.keysym.sym == 'z' && menu_selection != 1) menu_selection -= 1;
+            else if(event.key.keysym.sym == 'd' && difficulty_selection != 3 && menu_selection == 2) difficulty_selection += 1;
+            else if(event.key.keysym.sym == 'q' && difficulty_selection != 1 && menu_selection == 2) difficulty_selection -= 1;
+            else if(event.key.keysym.sym == SDLK_SPACE && menu_selection == 1) menu = false;
+            else if(event.key.keysym.sym == SDLK_SPACE && menu_selection == 3) wants_to_quit = true;
+        }
+
         angle += dt * 0.1;
         return;
     }
 
+    if(event.type == SDL_KEYUP)
+    {
+        if(event.key.keysym.sym == SDLK_ESCAPE)
+        {
+            if(menu == false && pause_menu == false && game_over == false) pause_menu = true;
+        }
+    }
+
+    if(pause_menu)
+    {
+        map->speed = 0;
+        if(event.type == SDL_KEYUP)
+        {
+            if(event.key.keysym.sym == 's' && menu_selection != 2) menu_selection += 1;
+            else if(event.key.keysym.sym == 'z' && menu_selection != 1) menu_selection -= 1;
+            else if(event.key.keysym.sym == SDLK_SPACE && menu_selection == 1) 
+                {
+                    pause_menu = false;
+                    map->speed = 0.03;
+                }
+            else if(event.key.keysym.sym == SDLK_SPACE && menu_selection == 2) wants_to_quit = true;
+        }
+    }
+
+    if(game_over)
+    {
+        if(event.type == SDL_KEYUP)
+        {
+            if(event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_ESCAPE) wants_to_quit = true;
+        }
+    }
+
     //Forward - backward movement
-    if(pressed_keys[0])
+    if(pressed_keys[0] && pause_menu == false)
         walk_y = speed * dt;
-    else if(pressed_keys[2])
+    else if(pressed_keys[2] && pause_menu == false)
         walk_y = -speed * dt;
     else
         walk_y = 0;
 
     //Left - right movement
-    if(pressed_keys[3])
+    if(pressed_keys[3] && pause_menu == false)
         walk_x = speed * dt * 0.5;
-    else if(pressed_keys[1])
+    else if(pressed_keys[1] && pause_menu == false)
         walk_x = -speed * dt * 0.5;
     else
         walk_x = 0;
 
     //rotation
-    if(fabs(turn) < turn_max)
+    if(fabs(turn) < turn_max && pause_menu == false)
     {
         if(pressed_keys[5])
             turn += turn_accel * dt;
         else if(pressed_keys[4])
             turn -= turn_accel * dt;
     }
-    if((!pressed_keys[5] && turn > 0) || (!pressed_keys[4] && turn < 0))
+    if((!pressed_keys[5] && turn > 0 && pause_menu == false) || (!pressed_keys[4] && turn < 0 && pause_menu == false))
         turn = 0;
 
     angle += turn;

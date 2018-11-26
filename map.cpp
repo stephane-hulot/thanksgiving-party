@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "map.h"
 
-Map::Map() : map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
+Map::Map() : speed(0.03), diff_damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
 {
 	SDL_Surface* map_tex = SDL_LoadBMP("map.bmp");
 
@@ -88,7 +88,7 @@ Map::Map() : map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::v
 	update_dist_map(2, 2);
 }
 
-Map::Map(const Map& m) : map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
+Map::Map(const Map& m) : speed(0.03), diff_damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
 {
 	map = m.map;
 	w = m.w;
@@ -165,7 +165,7 @@ int Map::damage_player()
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
 		if(sprites.at(i).type == 1 && sprites.at(i).sqr_dist < 2)
-			damage += 3;
+			damage += diff_damage;
 	}
 	return damage;
 }
@@ -197,8 +197,6 @@ void Map::update_ai(float player_x, float player_y)
 	if(dist[px+py*w] != 0)
 		update_dist_map(px, py);
 
-	//enemy speed
-	float speed = 0.03;
 
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{

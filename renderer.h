@@ -29,7 +29,11 @@ class Renderer
 
         void draw_sprite(Sprite s);
         void draw_2d_sprite(ushort itex, ushort x, ushort y, float size);
-        void draw_text(ushort x, ushort y, std::string text, ushort font_size);
+        void draw_text(ushort x, ushort y, std::string text, ushort font_size, SDL_Color ttf_color);
+        
+        void menu();
+        void pause_menu();
+        void game_over();
 
         SDL_Window* window;
         SDL_Renderer* sdl_renderer;

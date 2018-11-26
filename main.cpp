@@ -30,7 +30,8 @@ int main()
             //sort sprites only 5 times per seconds
             map.sort_sprites(player->get_x(), player->get_y());
             map.animate_sprites();
-            player->health -= map.damage_player();
+            if(player->pause_menu == false) player->health -= map.damage_player();
+
         }
 
         map.update_doors(player->get_x(), player->get_y(), dt);

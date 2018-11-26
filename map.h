@@ -36,6 +36,9 @@ class Map
         Map();
         unsigned short w = 32;
 		unsigned short h = 32;
+
+		float speed = 0.03; //ennemy speed
+		int diff_damage = 0;
 		
 		char get_tile(unsigned short x, unsigned short y);
 		void set_tile(unsigned short x, unsigned short y, char tile);
