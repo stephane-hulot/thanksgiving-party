@@ -8,6 +8,10 @@
 
 const float fov = 60 * M_PI / 180.0;
 
+const SDL_Color ttf_color_white = {255, 255, 255, 255};
+const SDL_Color ttf_color_banana = {209, 182, 6, 255};
+const SDL_Color ttf_color_red = {255, 0, 0, 255};
+
 class Renderer
 {
     public:
@@ -29,7 +33,7 @@ class Renderer
 
         void draw_sprite(Sprite s);
         void draw_2d_sprite(ushort itex, ushort x, ushort y, float size);
-        void draw_text(ushort x, ushort y, std::string text, ushort font_size, SDL_Color ttf_color);
+        void draw_text(ushort x, ushort y, std::string text, bool big_text, SDL_Color ttf_color);
 
         void menu();
         void pause_menu();
@@ -44,6 +48,8 @@ class Renderer
 
         SDL_Surface* wall_textures;
         SDL_Surface* sprites_textures;
+        TTF_Font *font_big;
+        TTF_Font *font_medium;
         float* zbuffer;
 
         Player* player;
