@@ -32,13 +32,13 @@ Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<
 			int id = y * w + x;
 			Uint32 pixel = get_pixel(map_tex, x, y);
 
-			if(pixel == 0) //black 0,0,0
+			if(pixel == 0) //black 0,0,0 : grass
 				map[id] = '0';
-			else if(pixel == 65280) //green 0,255,0
+			else if(pixel == 65280) //green 0,255,0 : bricks
 				map[id] = '1';
-			else if(pixel == 255) //blue 0,0,255
+			else if(pixel == 255) //blue 0,0,255 : cobblestone
 				map[id] = '2';
-			else if(pixel == 16776960) //yellow 255,255,0
+			else if(pixel == 16776960) //yellow 255,255,0 : door
 			{
 				map[id] = '3';
 
@@ -48,7 +48,7 @@ Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<
 				doors.at(index).y = y;
 				doors.at(index).animationState = 1;
 			}
-			else if(pixel == 16711680) //red 255,0,0
+			else if(pixel == 16711680) //red 255,0,0 : enemy
 			{
 				map[id] = ' ';
 				
@@ -57,10 +57,10 @@ Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<
 				sprites.at(index).x = x + (std::rand() % 100) / 100.0;
 				sprites.at(index).y = y + (std::rand() % 100) / 100.0;
 				sprites.at(index).itex = std::rand() % 2 == 1 ? 1 : 4;
-				sprites.at(index).type = 1; //enemy type
+				sprites.at(index).type = Enemy;
 				sprites.at(index).size = 500 + ((id * 50) % 100);
 			}
-			else if(pixel == 65535) //cyan 0,255,255
+			else if(pixel == 65535) //cyan 0,255,255 : flowers
 			{
 				map[id] = ' ';
 
@@ -71,11 +71,11 @@ Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<
 					sprites.at(index).x = x + (std::rand() % 100) / 100.0;
 					sprites.at(index).y = y + (std::rand() % 100) / 100.0;
 					sprites.at(index).itex = 2;
-					sprites.at(index).type = 0;
+					sprites.at(index).type = Decoration;
 					sprites.at(index).size = 200 + ((id * 50) % 100);
 				}
 			}
-			else if(pixel == 16711935)
+			else if(pixel == 16711935) //magenta 255,0,255 : key
 			{
 				map[id] = ' ';
 
@@ -84,10 +84,10 @@ Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<
 				sprites.at(index).x = x;
 				sprites.at(index).y = y;
 				sprites.at(index).itex = 5;
-				sprites.at(index).type = 2;
+				sprites.at(index).type = Key;
 				sprites.at(index).size = 400;
 			}
-			else
+			else //empty
 				map[id] = ' ';
 			
 			std::cout<<get_tile(x, y);
@@ -166,7 +166,7 @@ void Map::sort_sprites(float player_x, float player_y)
 	{
 		sprites.at(i).sqr_dist = pow(player_x - sprites.at(i).x, 2) + pow(player_y - sprites.at(i).y, 2);
 
-		if(sprites.at(i).type == 3 && sprites.at(i).start_time + 500 < SDL_GetTicks())
+		if(sprites.at(i).type == Temporary && sprites.at(i).start_time + 500 < SDL_GetTicks())
 			delete_sprite(i);
 	}
 	std::sort(sprites.begin(), sprites.end());
@@ -177,7 +177,7 @@ int Map::damage_player()
 	int amount = 0;
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
-		if(sprites.at(i).type == 1 && sprites.at(i).sqr_dist < 2)
+		if(sprites.at(i).type == Enemy && sprites.at(i).sqr_dist < 2)
 			amount += damage;
 	}
 	return amount;
@@ -187,7 +187,7 @@ bool Map::pickup_keys()
 {
 	for(unsigned int i = sprites.size() - 1; i > 0; i--)
 	{
-		if(sprites.at(i).type == 2 && sprites.at(i).sqr_dist < 2)
+		if(sprites.at(i).type == Key && sprites.at(i).sqr_dist < 2)
 		{
 			delete_sprite(i);
 			return true;
@@ -201,12 +201,12 @@ void Map::animate_sprites()
 {
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
-		if(sprites.at(i).type == 1)
+		if(sprites.at(i).type == Enemy)
 			sprites.at(i).itex = sprites.at(i).itex == 1 ? 4 : 1;
 	}
 }
 
-std::vector<Sprite> Map::get_sprites()
+std::vector<Sprite> const& Map::get_sprites()
 {
 	return sprites;
 }
@@ -223,7 +223,7 @@ void Map::add_temp_sprite(ushort itex, float x, float y, ushort size)
 	sprites.at(index).x = x;
 	sprites.at(index).y = y;
 	sprites.at(index).itex = itex;
-	sprites.at(index).type = 3;
+	sprites.at(index).type = Temporary;
 	sprites.at(index).size = size;
 }
 
@@ -237,7 +237,7 @@ void Map::update_ai(float player_x, float player_y)
 
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
-		if(sprites.at(i).type != 1) continue;
+		if(sprites.at(i).type != Enemy) continue;
 
 		ushort x = ushort(sprites.at(i).x);
 		ushort y = ushort(sprites.at(i).y);

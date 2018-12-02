@@ -1,10 +1,9 @@
 #include <iostream>
 #include <cmath>
 #include "player.h"
-
-Player::Player(Map* m) : wants_to_quit(false), display_flash(false), menu(true), pause(false), game_over(false), menu_select(0), difficulty(0),
-score(0), health(100), key_count(0),
-    x(3), y(3), angle(0), turn(0), walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(m)
+ 
+Player::Player(Map* ma, Menu* me) : display_flash(false), score(0), health(100), key_count(0), x(3), y(3), angle(0),
+    turn(0), walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(ma), menu(me)
 {
     pressed_keys = new bool[7];
     for(int i = 0; i < 7; i++)
@@ -22,67 +21,54 @@ Player& Player::operator=(Player p)
 void Player::handle_events(float dt)
 {
     SDL_Event event;
-    game_over = health < 1;
-    if (SDL_PollEvent(&event))
+    if(health < 1)
+        menu->current = GameOver;
+
+    menu->mouse_down = false; //the menu should see the mouse button clicked for one frame only
+    while(SDL_PollEvent(&event))
     {
-        if(event.type == SDL_KEYUP)
-        {
-            update_key(event.key.keysym.sym, false);
-
-            if(menu)
-            {
-                if(event.key.keysym.sym == 's' && menu_select != 2) menu_select += 1;
-                else if(event.key.keysym.sym == 'z' && menu_select != 0) menu_select -= 1;
-                else if(event.key.keysym.sym == 'd' && difficulty != 2 && menu_select == 1) difficulty += 1;
-                else if(event.key.keysym.sym == 'q' && difficulty != 0 && menu_select == 1) difficulty -= 1;
-                else if(event.key.keysym.sym == SDLK_SPACE && menu_select == 0) menu = false;
-                else if(event.key.keysym.sym == SDLK_SPACE && menu_select == 2) wants_to_quit = true;
-            }
-
-            if(event.key.keysym.sym == SDLK_ESCAPE)
-            {
-                if(!menu && !pause && !game_over)
-                    pause = true;
-            }
-
-            if(pause)
-            {
-                map->speed = 0;
-                if(event.key.keysym.sym == 's' && menu_select != 1) menu_select += 1;
-                else if(event.key.keysym.sym == 'z' && menu_select != 0) menu_select -= 1;
-                else if(event.key.keysym.sym == SDLK_SPACE && menu_select == 0) 
-                {
-                    pause = false;
-                    map->speed = 0.03;
-                }
-                else if(event.key.keysym.sym == SDLK_SPACE && menu_select == 1)
-                    wants_to_quit = true;
-            }
-
-            if(game_over)
-            {
-                if(event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_ESCAPE)
-                    wants_to_quit = true;
-            }
-    
-        }
-
-        if(event.type == SDL_KEYDOWN)
+        //mouse button is clicked so we update the menu
+        if(event.type == SDL_MOUSEBUTTONDOWN)
+            menu->mouse_down = true;
+        //a key is pressed
+        else if(event.type == SDL_KEYDOWN)
         {
             update_key(event.key.keysym.sym, true);
 
+            //weapon firing
             if(event.key.keysym.sym == SDLK_SPACE)
             {
-                if(!menu)
+                if(menu->current == None)
                     Fire();
             }
         }
+        //a key is released
+        else if(event.type == SDL_KEYUP)
+        {
+            update_key(event.key.keysym.sym, false);
 
-        if(!wants_to_quit)
-            wants_to_quit = event.type == SDL_QUIT;
+            //pauses the game if the player presses Escape
+            if(event.key.keysym.sym == SDLK_ESCAPE)
+            {
+                if(menu->current == None)
+                    menu->current = Pause;
+                else if(menu->current == Pause)
+                    menu->current = None;
+            }
+
+            //quits the game if the player is dead and presses Space or Escape
+            if(menu->current == GameOver)
+            {
+                if(event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_ESCAPE)
+                    menu->wants_to_quit = true;
+            }
+        }
+        //close the game if the user presses the close window button
+        else if(!menu->wants_to_quit)
+            menu->wants_to_quit = event.type == SDL_QUIT;
     }
 
-    if(menu)
+    if(menu->current == Main)
     {
         angle += dt * 0.1;
         return;
@@ -135,13 +121,13 @@ void Player::handle_events(float dt)
 
 void Player::update_key(SDL_Keycode key, bool state)
 {
-    if (key == 'z' && !pause) pressed_keys[0] = state;
-    else if (key == 'q' && !pause) pressed_keys[1] = state;
-    else if (key == 's' && !pause) pressed_keys[2] = state;
-    else if (key == 'd' && !pause) pressed_keys[3] = state;
-    else if (key == SDLK_LEFT && !pause) pressed_keys[4] = state;
-    else if (key == SDLK_RIGHT && !pause) pressed_keys[5] = state;
-    else if (key == SDLK_SPACE && !pause) pressed_keys[6] = state;
+    if (key == 'z' && menu->current != Pause) pressed_keys[0] = state;
+    else if (key == 'q' && menu->current != Pause) pressed_keys[1] = state;
+    else if (key == 's' && menu->current != Pause) pressed_keys[2] = state;
+    else if (key == 'd' && menu->current != Pause) pressed_keys[3] = state;
+    else if (key == SDLK_LEFT && menu->current != Pause) pressed_keys[4] = state;
+    else if (key == SDLK_RIGHT && menu->current != Pause) pressed_keys[5] = state;
+    else if (key == SDLK_SPACE && menu->current != Pause) pressed_keys[6] = state;
 }
 
 void Player::Fire()

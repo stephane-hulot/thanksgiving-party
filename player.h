@@ -3,21 +3,18 @@
 
 #include <SDL2/SDL.h>
 #include "map.h"
+#include "button.h"
+#include "menu.h"
 
 class Player
 {
 	public:
-        Player(Map* m);
-        void clean(); // could be moved to the destructor, however shared_ptr would be needed for the member pointers (c11)
+        Player(Map* ma, Menu* me);
         void handle_events(float dt);
-        bool wants_to_quit, display_flash, menu, pause, game_over = false;
-        int menu_select = 0;
-        int difficulty = 0;
+        bool display_flash = false;
         int score = 0;
         int health = 100;
         ushort key_count = 0;
-
-        
 
         float get_x();
         float get_y();
@@ -26,7 +23,7 @@ class Player
         ~Player();
 
         //copy constructor to avoid warning in c++11
-        Player(const Player& p) : Player(p.map) {};
+        Player(const Player& p) : Player(p.map, p.menu) {};
         Player& operator=(Player p);
 
     private:
@@ -39,6 +36,7 @@ class Player
         void Fire();
 
         Map* map;
+        Menu* menu;
 };
 
 #endif

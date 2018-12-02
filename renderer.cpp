@@ -2,8 +2,8 @@
 #include <cmath>
 #include "renderer.h"
 
-Renderer::Renderer(Player* p, Map* m) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL),
-    screen_w(0), screen_h(0), wall_textures(NULL), sprites_textures(NULL), font_big(NULL), font_medium(NULL), zbuffer(NULL), player(p), map(m)
+Renderer::Renderer(Player* p, Map* ma, Menu* me) : window(NULL), sdl_renderer(NULL), render_texture(NULL), pixels(NULL), screen_w(0), screen_h(0),
+    wall_textures(NULL), sprites_textures(NULL), font_big(NULL), font_medium(NULL), zbuffer(NULL), player(p), map(ma), menu(me)
 {
     
 }
@@ -12,6 +12,7 @@ Renderer& Renderer::operator=(Renderer r)
 {
     player = r.player;
     map = r.map;
+    menu = r.menu;
     return *this;
 }
 
@@ -63,10 +64,6 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
     }
 
     zbuffer = new float[screen_w];
-
-    std::cout<<"Magenta"<<rgb_to_int(255, 0, 255);
-
-    std::cout<<"caca1";
     
     TTF_Init();
     font_big = TTF_OpenFont("pixelz.ttf", 100);
@@ -77,7 +74,6 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
         return false;
     }
     
-
     return true;
 }
 
@@ -178,7 +174,7 @@ void Renderer::draw()
         draw_sprite(sprites.at(i));
     }
 
-    if(!player->menu && !player->game_over && !player->pause)
+    if(menu->current == None)
     {
         //FPS weapon
         int offset = screen_w / 2 + 100;
@@ -221,18 +217,18 @@ void Renderer::draw()
         }
     }
 
-    if(player->menu)
+    if(menu->current == Main)
         draw_2d_sprite(1, 500, 200, 200);
     
     SDL_UpdateTexture(render_texture, NULL, pixels, screen_w * sizeof(Uint32));
     SDL_RenderCopy(sdl_renderer, render_texture, NULL, NULL);
 
-    if(player->menu)
-        menu();
-    else if(player->pause)
-        pause_menu();
-    else if(player->game_over)
-        game_over();
+    if(menu->current == Main)
+        display_menu();
+    else if(menu->current == Pause)
+        display_pause_menu();
+    else if(menu->current == GameOver)
+        display_game_over();
     else //normal display
     {   
         std::string score_text = "Score " + std::to_string(player->score);
@@ -332,27 +328,25 @@ void Renderer::draw_text(ushort x, ushort y, std::string text, bool big_text, SD
     SDL_FreeSurface(ttf_surface);
 }
 
-void Renderer::menu()
+void Renderer::display_menu()
 {   
     draw_text(100, 100, "Thanksgiving Party", true, ttf_color_white);
-    draw_text(500, 400, "PLAY", false, player->menu_select == 0 ? ttf_color_banana : ttf_color_white);
-    draw_text(500, 470, "LEVEL :", false, player->menu_select == 1 ? ttf_color_banana : ttf_color_white);
-    std::string diff_display = player->difficulty == 0 ? "EASY"
-        : (player->difficulty == 1 ? "MEDIUM" : "HARD");
-    draw_text(770, 470, diff_display, false, player->menu_select == 1 ? ttf_color_banana : ttf_color_white);
-    draw_text(500, 540, "QUIT", false, player->menu_select == 2 ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 400, "PLAY", false, menu->check_hover(0) ? ttf_color_banana : ttf_color_white);
+    std::string diff_display = std::string("DIFFICULTY:") + (menu->difficulty == 0 ? "EASY" : (menu->difficulty == 1 ? "NORMAL" : "HARD"));
+    draw_text(380, 470, diff_display, false, menu->check_hover(1) ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 540, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
 
-    map->damage = player->difficulty == 0 ? 2 : (player->difficulty == 1 ? 6 : 10);
+    map->damage = menu->difficulty == 0 ? 2 : (menu->difficulty == 1 ? 6 : 10);
 }
 
-void Renderer::pause_menu()
+void Renderer::display_pause_menu()
 {   
     draw_text(470, 100, "PAUSE", true, ttf_color_white);
-    draw_text(500, 300, "RESUME", false, player->menu_select == 0 ? ttf_color_banana : ttf_color_white);
-    draw_text(500, 370, "QUIT", false, player->menu_select == 1 ? ttf_color_banana : ttf_color_white);
+    draw_text(500, 300, "RESUME", false, menu->check_hover(3) ? ttf_color_banana : ttf_color_white);
+    draw_text(530, 370, "QUIT", false, menu->check_hover(4) ? ttf_color_banana : ttf_color_white);
 }
 
-void Renderer::game_over()
+void Renderer::display_game_over()
 {   
     draw_text(380, 200, "GAME OVER", true, ttf_color_red);
 }
@@ -361,7 +355,6 @@ void Renderer::game_over()
 //  DRAW UTILS
 //##########
 
-//Gets a pixel from the texture file
 Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
 {
     SDL_Surface* tex = sprite ? sprites_textures : wall_textures;
@@ -372,8 +365,6 @@ Uint32 Renderer::get_pixel_tex(ushort itex, ushort x, ushort y, bool sprite)
     return p[0] | p[1] << 8 | p[2] << 16; 
 }
 
-
-//sets a pixel on the screen
 void Renderer::set_pixel(ushort x, ushort y, Uint32 pixel)
 {
     if (x >= screen_w || y >= screen_h)

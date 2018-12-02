@@ -4,12 +4,14 @@
 #include <SDL2/SDL.h>
 #include <vector>
 
+enum SpriteType {Decoration, Enemy, Key, Temporary};
+
 struct Sprite
 {
 	float x, y = 0;
 	unsigned short size = 600;
 	unsigned short itex = 0;
-	unsigned short type = 0; //0 = decoration, 1 = ennemy, 2 = key, 3 = temp
+	SpriteType type = Decoration;
 	//squared distance from the player, it's used to sort sprites so no need to calculate the square root
 	float sqr_dist = 0;
 	Uint32 start_time = 0;
@@ -20,7 +22,7 @@ struct Sprite
 		return sqr_dist > s.sqr_dist;
 	}
 
-	Sprite() : x(0), y(0), size(600), itex(0), type(0), sqr_dist(0), start_time(SDL_GetTicks()) {}
+	Sprite() : x(0), y(0), size(600), itex(0), type(Decoration), sqr_dist(0), start_time(SDL_GetTicks()) {}
 };
 
 struct Door
@@ -38,21 +40,21 @@ class Map
         unsigned short w = 32;
 		unsigned short h = 32;
 
-		float speed = 0.03; //enemy speed
-		int damage = 0;
+		float speed = 0.03; //enemy's speed, changes based on difficulty
+		int damage = 0; //damage inflicted by each enemy, changes based on difficulty
 		
 		char get_tile(unsigned short x, unsigned short y);
 		void set_tile(unsigned short x, unsigned short y, char tile);
-		void sort_sprites(float player_x, float player_y);
-		std::vector<Sprite> get_sprites();
-		void delete_sprite(unsigned short id);
-		void update_ai(float player_x, float player_y);
-		Door get_door(unsigned short x, unsigned short y);
-		bool update_doors(float player_x, float player_y, float dt);
-		void animate_sprites();
-		int damage_player();
-		bool pickup_keys();
-		void add_temp_sprite(ushort itex, float x, float y, ushort size);
+		void sort_sprites(float player_x, float player_y); //sorts sprites in the vector based on the distance from the player
+		std::vector<Sprite> const& get_sprites();
+		void delete_sprite(unsigned short id); //deletes sprite at specified index in the vector
+		void update_ai(float player_x, float player_y); //moves enemies so they follow the player
+		Door get_door(unsigned short x, unsigned short y); //tries to retrive a door at specified coordinates, return 0 if not found
+		bool update_doors(float player_x, float player_y, float dt); //updates the animation state if the player is close enough
+		void animate_sprites(); //swaps sprites for turkeys animation
+		int damage_player(); //returns the amount of damage the player should receive based on difficulty and nearby turkeys
+		bool pickup_keys(); //returns true and remove the key from the map if the player is close enough, returns false if no key is picked up
+		void add_temp_sprite(ushort itex, float x, float y, ushort size); //adds a sprite to the map that is delete 500ms later (for explosions)
 		~Map();
 
 		//copy constructor to avoid warning in c++11
