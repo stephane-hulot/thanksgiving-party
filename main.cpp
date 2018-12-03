@@ -7,7 +7,7 @@ int main()
 {
     uint lastTime = 0;
     uint lastFPSDisplay = 0;
-    int fps = 60;
+    uint fps = 60;
 
     Map map;
     Menu menu;
@@ -29,7 +29,6 @@ int main()
         {
             lastFPSDisplay = lastTime;
             fps = 1 / dt;
-            std::cout<<fps<<" FPS"<<std::endl;
 
             //sort sprites only 5 times per seconds
             map.sort_sprites(player.get_x(), player.get_y());
@@ -47,11 +46,11 @@ int main()
             if(player.key_count > 0 && map.update_doors(player.get_x(), player.get_y(), dt))
                 player.key_count--;
 
-            map.update_ai(player.get_x(), player.get_y());
+            map.update_sprites(player.get_x(), player.get_y(), dt);
         }
 
         player.handle_events(dt);
-        renderer.draw();
+        renderer.draw(fps);
     }
 
     return 0;

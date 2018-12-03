@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "map.h"
 
-Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
+Map::Map() : speed(1.2), damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
 {
 	SDL_Surface* map_tex = SDL_LoadBMP("map.bmp");
 
@@ -100,12 +100,11 @@ Map::Map() : speed(0.03), damage(0), map(NULL), dist(NULL), sprites(std::vector<
 	update_dist_map(2, 2);
 }
 
-Map& Map::operator=(Map m)
+Map& Map::operator=(const Map& m)
 {
-	map = m.map;
+	map = std::move(m.map);
 	w = m.w;
 	h = m.h;
-	dist = new ushort[w*h];
     return *this;
 }
 
@@ -227,7 +226,7 @@ void Map::add_temp_sprite(ushort itex, float x, float y, ushort size)
 	sprites.at(index).size = size;
 }
 
-void Map::update_ai(float player_x, float player_y)
+void Map::update_sprites(float player_x, float player_y, float dt)
 {
 	//player position
 	int px = ushort(player_x);
@@ -237,32 +236,37 @@ void Map::update_ai(float player_x, float player_y)
 
 	for(unsigned int i = 0; i < sprites.size(); i++)
 	{
-		if(sprites.at(i).type != Enemy) continue;
+		if(sprites.at(i).type == Enemy)
+		{
+			ushort x = ushort(sprites.at(i).x);
+			ushort y = ushort(sprites.at(i).y);
 
-		ushort x = ushort(sprites.at(i).x);
-		ushort y = ushort(sprites.at(i).y);
+			int d = dist[x + y * w];
 
-		int d = dist[x + y * w];
-
-		if(d > dist[x+(y-1)*w])
-		{
-			sprites.at(i).y -= speed;
-			sprites.at(i).x += (x - sprites.at(i).x + 0.5) * speed;
+			if(d > dist[x+(y-1)*w])
+			{
+				sprites.at(i).y -= speed * dt;
+				sprites.at(i).x += (x - sprites.at(i).x + 0.5) * speed* dt;
+			}
+			else if(d > dist[x+(y+1)*w])
+			{
+				sprites.at(i).y += speed * dt;
+				sprites.at(i).x += (x - sprites.at(i).x + 0.5) * speed * dt;
+			}
+			else if(d > dist[(x+1)+y*w])
+			{
+				sprites.at(i).x += speed;
+				sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed * dt;
+			}
+			else if(d > dist[(x-1)+y*w])
+			{
+				sprites.at(i).x -= speed * dt;
+				sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed * dt;
+			}
 		}
-		else if(d > dist[x+(y+1)*w])
+		else if(sprites.at(i).type == Temporary)
 		{
-			sprites.at(i).y += speed;
-			sprites.at(i).x += (x - sprites.at(i).x + 0.5) * speed;
-		}
-		else if(d > dist[(x+1)+y*w])
-		{
-			sprites.at(i).x += speed;
-			sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed;
-		}
-		else if(d > dist[(x-1)+y*w])
-		{
-			sprites.at(i).x -= speed;
-			sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed;
+			sprites.at(i).size += 15;
 		}
 	}
 }
@@ -279,8 +283,8 @@ void Map::update_dist_map(ushort px, ushort py)
 	}
 
 	//all for neighbors
-	int nx[4] = {0, -1, 1, 0};
-	int ny[4] = {-1, 0, 0, 1};
+	const int nx[4] = {0, -1, 1, 0};
+	const int ny[4] = {-1, 0, 0, 1};
 
 	dist[px+py*w] = 0; //sets player's distance to 0
 	for (int iter = 0; iter < 10; iter++)
@@ -290,13 +294,15 @@ void Map::update_dist_map(ushort px, ushort py)
 			for (int x = 0; x < w; x++)
 			{
 				int idx = x + y * w;
-				if(map[idx] != ' ') continue;
-				//for each neighbor
-				for(int i = 0; i < 4; i++)
+				if(map[idx] == ' ')
 				{
-					int tidx = idx + nx[i] + ny[i] * w;
-					if(map[tidx] == ' ' && dist[tidx] > dist[idx])
-						dist[tidx] = dist[idx] + 1;
+					//for each neighbor
+					for(int i = 0; i < 4; i++)
+					{
+						int tidx = idx + nx[i] + ny[i] * w;
+						if(map[tidx] == ' ' && dist[tidx] > dist[idx])
+							dist[tidx] = dist[idx] + 1;
+					}
 				}		
 			}
 		}

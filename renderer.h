@@ -16,12 +16,12 @@ class Renderer
     public:
         Renderer(Player* p, Map* ma, Menu* me);
         bool init_sdl(const char* title, ushort width, ushort height); //initializes SDL and necessary data for rendering
-        void draw(); //renders the game and UI and displays it
+        void draw(uint fps); //renders the game and UI and displays it
         ~Renderer();
 
         //copy constructor to avoid warning in c++11
         Renderer(const Renderer& r) : Renderer(r.player, r.map, r.menu) {};
-        Renderer& operator=(Renderer r);
+        Renderer& operator=(const Renderer& r);
         
     private:
         void set_pixel(ushort x, ushort y, Uint32 pixel); //sets a pixel on the screen

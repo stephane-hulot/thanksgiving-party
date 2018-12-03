@@ -12,9 +12,10 @@ Player::Player(Map* ma, Menu* me) : display_flash(false), score(0), health(100),
     }
 }
 
-Player& Player::operator=(Player p)
+Player& Player::operator=(const Player& p)
 {
-    map = p.map;
+    map = std::move(p.map);
+    menu = std::move(p.menu);
     return *this;
 }
 
@@ -155,7 +156,7 @@ void Player::Fire()
             if(map->get_tile(ushort(ray_x), ushort(ray_y)) == '2')
             {
                 map->set_tile(ushort(ray_x), ushort(ray_y), ' ');
-                map->add_temp_sprite(7, ushort(ray_x) + 0.5, ushort(ray_y) + 0.5, 1200);
+                map->add_temp_sprite(7, ushort(ray_x) + 0.5, ushort(ray_y) + 0.5, 1000);
             }
         }
         else
@@ -169,7 +170,7 @@ void Player::Fire()
                     map->delete_sprite(i);
                     score += 10;
                     hit_wall = true;
-                    map->add_temp_sprite(6, sprites.at(i).x, sprites.at(i).y, 600);
+                    map->add_temp_sprite(6, sprites.at(i).x, sprites.at(i).y, 400);
                     break;
                 }
             }

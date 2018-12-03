@@ -48,7 +48,7 @@ class Map
 		void sort_sprites(float player_x, float player_y); //sorts sprites in the vector based on the distance from the player
 		std::vector<Sprite> const& get_sprites();
 		void delete_sprite(unsigned short id); //deletes sprite at specified index in the vector
-		void update_ai(float player_x, float player_y); //moves enemies so they follow the player
+		void update_sprites(float player_x, float player_y, float dt); //moves enemies so they follow the player and changes the size of temp sprites
 		Door get_door(unsigned short x, unsigned short y); //tries to retrive a door at specified coordinates, return 0 if not found
 		bool update_doors(float player_x, float player_y, float dt); //updates the animation state if the player is close enough
 		void animate_sprites(); //swaps sprites for turkeys animation
@@ -59,7 +59,7 @@ class Map
 
 		//copy constructor to avoid warning in c++11
         Map(const Map& m) : Map() {map = m.map;};
-        Map& operator=(Map m);
+        Map& operator=(const Map& m);
 
 	private:
 		char* map;

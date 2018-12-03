@@ -8,11 +8,11 @@ Renderer::Renderer(Player* p, Map* ma, Menu* me) : window(NULL), sdl_renderer(NU
     
 }
 
-Renderer& Renderer::operator=(Renderer r)
+Renderer& Renderer::operator=(const Renderer& r)
 {
-    player = r.player;
-    map = r.map;
-    menu = r.menu;
+    player = std::move(r.player);
+    map = std::move(r.map);
+    menu = std::move(r.menu);
     return *this;
 }
 
@@ -39,8 +39,6 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
         std::cerr << "SDL Renderer init failed, SDL_GetError()=" << SDL_GetError() << std::endl;
         return false;
     }
-
-    //SDL_ShowCursor(SDL_DISABLE);
 
     wall_textures = SDL_LoadBMP("walltext.bmp");
     sprites_textures = SDL_LoadBMP("sprites.bmp");
@@ -81,11 +79,11 @@ bool Renderer::init_sdl(const char* title, ushort width, ushort height)
 //  DRAW
 //##########
 
-void Renderer::draw()
+void Renderer::draw(uint fps)
 {
     int middle = screen_h / 2;
 
-    for(int i = 0; i < screen_w; i++) //for each vertical line of pixel
+    for(int i = 0; i < screen_w; i++) //for each vertical column of pixel
     {
         //angle of the ray in rad
         float ray_angle = (1.0 - i / float(screen_w)) * (player->get_angle() - fov / 2.0) + i / float(screen_w) * (player->get_angle() + fov / 2.0);
@@ -231,7 +229,7 @@ void Renderer::draw()
         display_game_over();
     else //normal display
     {   
-        std::string score_text = "Score " + std::to_string(player->score);
+        std::string score_text = std::to_string(fps) + " FPS - Score " + std::to_string(player->score);
         draw_text(10, 10, score_text, false, ttf_color_white);
         draw_text(10, screen_h - 62, std::to_string(player->health), false, ttf_color_white);
     }
@@ -336,7 +334,8 @@ void Renderer::display_menu()
     draw_text(380, 470, diff_display, false, menu->check_hover(1) ? ttf_color_banana : ttf_color_white);
     draw_text(550, 540, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
 
-    map->damage = menu->difficulty == 0 ? 2 : (menu->difficulty == 1 ? 6 : 10);
+    map->damage = menu->difficulty == 0 ? 1 : (menu->difficulty == 1 ? 3 : 6);
+    map->speed = menu->difficulty == 0 ? 0.8 : (menu->difficulty == 1 ? 1.2 : 2.5);
 }
 
 void Renderer::display_pause_menu()

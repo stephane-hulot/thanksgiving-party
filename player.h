@@ -24,7 +24,7 @@ class Player
 
         //copy constructor to avoid warning in c++11
         Player(const Player& p) : Player(p.map, p.menu) {};
-        Player& operator=(Player p);
+        Player& operator=(const Player& p);
 
     private:
         float x, y, angle; //player position and rotation

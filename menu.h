@@ -22,10 +22,6 @@ class Menu
 
         ~Menu();
 
-        //copy constructor to avoid warning in c++11
-        //Menu(const Menu& m) : Menu(p.map) {};
-        //Menu& operator=(Menu p);
-
     private:
         
 };
