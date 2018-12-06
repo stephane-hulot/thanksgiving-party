@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
  
-Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficulty(Normal),
+Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficulty(Normal), timer(Timer()),
     buttons({
         Button(550, 400, 140, 55), //play
         Button(380, 470, 600, 55), //difficulty
@@ -13,13 +13,7 @@ Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficult
 {
 
 }
-/*
-Menu& Menu::operator=(Menu p) 
-{
-    map = p.map;
-    return *this;
-}
-*/
+
 bool Menu::check_hover(ushort button_id)
 {
     int x, y;
@@ -33,7 +27,10 @@ bool Menu::check_hover(ushort button_id)
 void Menu::handle_click(ushort button_id)
 {
     if(button_id == 0) //play
+    {
         current = None;
+        timer.start();
+    }
     else if(button_id == 1) //difficulty
         difficulty = (Difficulty)(difficulty != 2 ? difficulty + 1 : 0);
     else if(button_id == 2 || button_id == 4) //quit

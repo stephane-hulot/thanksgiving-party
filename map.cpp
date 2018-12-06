@@ -3,10 +3,12 @@
 #include <algorithm>
 #include "map.h"
 
-Map::Map() : speed(1.2), damage(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
+Map::Map() : speed(1.2), damage(0), enemy_count(0), map(NULL), dist(NULL), sprites(std::vector<Sprite>()), doors(std::vector<Door>())
 {
+	//Loading the map texture
 	SDL_Surface* map_tex = SDL_LoadBMP("map.bmp");
 
+	//Error handling for texture loading
     if(!map_tex)
     {
         std::cerr << "Couldn't load texture file " << SDL_GetError() << std::endl;
@@ -19,11 +21,21 @@ Map::Map() : speed(1.2), damage(0), map(NULL), dist(NULL), sprites(std::vector<S
         return;
     }
 
+    //TODO : Fix this issue
+    //temporary workaround because map sizes other than 32x32 causes crashes
+    if(map_tex->w != 32 || map_tex->h != 32)
+    {
+    	std::cerr << "Map must be 32x32." << std::endl;
+        return;
+    }
+
     w = map_tex->w;
     h = map_tex->h;
 
     map = new char[w*h];
     dist = new ushort[w*h];
+
+    std::cout<<w<<';'<<h<<"\n";
 
 	for(ushort y = 0; y < h; y++)
 	{
@@ -59,6 +71,7 @@ Map::Map() : speed(1.2), damage(0), map(NULL), dist(NULL), sprites(std::vector<S
 				sprites.at(index).itex = std::rand() % 2 == 1 ? 1 : 4;
 				sprites.at(index).type = Enemy;
 				sprites.at(index).size = 500 + ((id * 50) % 100);
+				enemy_count++;
 			}
 			else if(pixel == 65535) //cyan 0,255,255 : flowers
 			{
@@ -94,7 +107,7 @@ Map::Map() : speed(1.2), damage(0), map(NULL), dist(NULL), sprites(std::vector<S
 		}
 		std::cout<<std::endl;
 	}
-	std::cout<<"Niveau chargé avec "<<sprites.size()<<" sprites"<<std::endl;
+	std::cout<<"Level loaded with "<<sprites.size()<<" sprites"<<std::endl;
 	SDL_FreeSurface(map_tex);
 
 	update_dist_map(2, 2);
@@ -161,7 +174,10 @@ bool Map::update_doors(float player_x, float player_y, float dt)
 
 void Map::sort_sprites(float player_x, float player_y)
 {
-	for(unsigned int i = 0; i < sprites.size(); i++)
+	if(sprites.size() < 2)
+		return;
+
+	for(unsigned int i = sprites.size() - 1; i > 0; i--)
 	{
 		sprites.at(i).sqr_dist = pow(player_x - sprites.at(i).x, 2) + pow(player_y - sprites.at(i).y, 2);
 
@@ -184,6 +200,9 @@ int Map::damage_player()
 
 bool Map::pickup_keys()
 {
+	if(sprites.size() == 0)
+		return false;
+
 	for(unsigned int i = sprites.size() - 1; i > 0; i--)
 	{
 		if(sprites.at(i).type == Key && sprites.at(i).sqr_dist < 2)
@@ -255,7 +274,7 @@ void Map::update_sprites(float player_x, float player_y, float dt)
 			}
 			else if(d > dist[(x+1)+y*w])
 			{
-				sprites.at(i).x += speed;
+				sprites.at(i).x += speed * dt;
 				sprites.at(i).y += (y - sprites.at(i).y + 0.5) * speed * dt;
 			}
 			else if(d > dist[(x-1)+y*w])
@@ -326,9 +345,9 @@ Uint32 Map::get_pixel(SDL_Surface* source, ushort x, ushort y)
 {
     if(x >= h || y >= w) 
         return 0;
-
-    Uint8 *p = (Uint8 *)source->pixels + (y - 1) * source->pitch + (x + h) * source->format->BytesPerPixel;
-    return p[0] | p[1] << 8 | p[2] << 16; 
+    
+    Uint8 *p = (Uint8 *)source->pixels + y * source->pitch + x * source->format->BytesPerPixel;
+    return p[0] | p[1] << 8 | p[2] << 16;
 }
 
 Map::~Map()

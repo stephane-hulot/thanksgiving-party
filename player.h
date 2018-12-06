@@ -12,7 +12,6 @@ class Player
         Player(Map* ma, Menu* me);
         void handle_events(float dt);
         bool display_flash = false;
-        int score = 0;
         int health = 100;
         ushort key_count = 0;
 

@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
  
-Player::Player(Map* ma, Menu* me) : display_flash(false), score(0), health(100), key_count(0), x(3), y(3), angle(0),
+Player::Player(Map* ma, Menu* me) : display_flash(false), health(100), key_count(0), x(3), y(3), angle(0),
     turn(0), walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(ma), menu(me)
 {
     pressed_keys = new bool[7];
@@ -58,7 +58,7 @@ void Player::handle_events(float dt)
             }
 
             //quits the game if the player is dead and presses Space or Escape
-            if(menu->current == GameOver)
+            if(menu->current == GameOver || menu->current == Win)
             {
                 if(event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_ESCAPE)
                     menu->wants_to_quit = true;
@@ -163,15 +163,23 @@ void Player::Fire()
         {
             for(unsigned int i = 0; i < sprites.size(); i++)
             {
-                if(sprites.at(i).type != 1) continue;
-                float sqr_dist = pow(ray_x - sprites.at(i).x, 2) + pow(ray_y - sprites.at(i).y, 2);
-                if(sqr_dist < 0.015)
+                if(sprites.at(i).type == Enemy)
                 {
-                    map->delete_sprite(i);
-                    score += 10;
-                    hit_wall = true;
-                    map->add_temp_sprite(6, sprites.at(i).x, sprites.at(i).y, 400);
-                    break;
+                   float sqr_dist = pow(ray_x - sprites.at(i).x, 2) + pow(ray_y - sprites.at(i).y, 2);
+                    if(sqr_dist < 0.015)
+                    {
+                        map->delete_sprite(i);
+                        hit_wall = true;
+                        map->add_temp_sprite(6, sprites.at(i).x, sprites.at(i).y, 400);
+
+                        map->enemy_count--;
+                        if(map->enemy_count < 1)
+                        {
+                            menu->timer.stop();
+                            menu->current = Win;
+                        }
+                        break;
+                    } 
                 }
             }
         }

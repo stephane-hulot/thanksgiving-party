@@ -12,7 +12,7 @@ bool Button::is_mouse_over(ushort mouse_x, ushort mouse_y)
     return is_over;
 }
 
-Button& Button::operator=(Button b)
+Button& Button::operator=(const Button& b)
 {
     this->x = b.x;
     this->y = b.y;

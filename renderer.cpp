@@ -227,10 +227,14 @@ void Renderer::draw(uint fps)
         display_pause_menu();
     else if(menu->current == GameOver)
         display_game_over();
+    else if(menu->current == Win)
+        display_win();
     else //normal display
     {   
-        std::string score_text = std::to_string(fps) + " FPS - Score " + std::to_string(player->score);
+        std::string fps_text = std::to_string(fps) + " FPS";
+        std::string score_text = std::to_string(map->enemy_count) + " enemies left - Timer:" + menu->timer.get_time_string();
         draw_text(10, 10, score_text, false, ttf_color_white);
+        draw_text(10, 60, fps_text, false, ttf_color_white);
         draw_text(10, screen_h - 62, std::to_string(player->health), false, ttf_color_white);
     }
     
@@ -333,9 +337,6 @@ void Renderer::display_menu()
     std::string diff_display = std::string("DIFFICULTY:") + (menu->difficulty == 0 ? "EASY" : (menu->difficulty == 1 ? "NORMAL" : "HARD"));
     draw_text(380, 470, diff_display, false, menu->check_hover(1) ? ttf_color_banana : ttf_color_white);
     draw_text(550, 540, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
-
-    map->damage = menu->difficulty == 0 ? 1 : (menu->difficulty == 1 ? 3 : 6);
-    map->speed = menu->difficulty == 0 ? 0.8 : (menu->difficulty == 1 ? 1.2 : 2.5);
 }
 
 void Renderer::display_pause_menu()
@@ -348,6 +349,12 @@ void Renderer::display_pause_menu()
 void Renderer::display_game_over()
 {   
     draw_text(380, 200, "GAME OVER", true, ttf_color_red);
+}
+
+void Renderer::display_win()
+{   
+    draw_text(380, 200, "You won !", true, ttf_color_white);
+    draw_text(250, 300, "Your time : " + menu->timer.get_time_string(), false, ttf_color_white);
 }
 
 //##########

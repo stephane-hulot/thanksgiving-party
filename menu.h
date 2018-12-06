@@ -4,8 +4,9 @@
 #include <SDL2/SDL.h>
 #include "map.h"
 #include "button.h"
+#include "timer.h"
 
-enum CurrentMenu {None, Main, Pause, GameOver};
+enum CurrentMenu {None, Main, Pause, GameOver, Win};
 enum Difficulty {Easy, Normal, Hard};
 
 class Menu
@@ -18,6 +19,7 @@ class Menu
         CurrentMenu current = Main; //currently displayed menu
         bool mouse_down = false; //true if a mouse button down during this frame, this is handled by the class Player
         Difficulty difficulty = Normal;
+        Timer timer;
         Button buttons[5]; //UI buttons
 
         ~Menu();

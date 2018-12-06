@@ -37,11 +37,12 @@ class Map
 {
 	public:
         Map();
-        unsigned short w = 32;
-		unsigned short h = 32;
+        unsigned short w = 0;
+		unsigned short h = 0;
 
 		float speed = 0.03; //enemy's speed, changes based on difficulty
 		int damage = 0; //damage inflicted by each enemy, changes based on difficulty
+		int enemy_count = 0;
 		
 		char get_tile(unsigned short x, unsigned short y);
 		void set_tile(unsigned short x, unsigned short y, char tile);

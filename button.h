@@ -11,7 +11,7 @@ class Button
 
         //copy constructor to avoid warning in c++11
         Button(const Button& b) : Button(b.x, b.y, b.w, b.h) {};
-        Button& operator=(Button b);
+        Button& operator=(const Button& b);
     private:
         ushort x, y, w, h;
 };

@@ -38,6 +38,7 @@ class Renderer
         void display_menu();
         void display_pause_menu();
         void display_game_over();
+        void display_win();
 
         SDL_Window* window;
         SDL_Renderer* sdl_renderer;

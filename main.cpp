@@ -10,6 +10,7 @@ int main()
     uint fps = 60;
 
     Map map;
+    if(map.w == 0) return 0;
     Menu menu;
 	Player player(&map, &menu);
     Renderer renderer(&player, &map, &menu);
@@ -47,6 +48,11 @@ int main()
                 player.key_count--;
 
             map.update_sprites(player.get_x(), player.get_y(), dt);
+        }
+        else if(menu.current == Main)
+        {
+            map.damage = menu.difficulty == 0 ? 1 : (menu.difficulty == 1 ? 3 : 6);
+            map.speed = menu.difficulty == 0 ? 0.8 : (menu.difficulty == 1 ? 1.2 : 2.5);
         }
 
         player.handle_events(dt);
