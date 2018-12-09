@@ -14,7 +14,7 @@ class Timer
 
         //copy constructor to avoid warning in c++11
         //Timer(const Timer& t) : Timer() {};
-        //Timer& operator=(const Timer& t);
+        //Timer& opera&éetor=(const Timer& t);
     private:
     	uint start_time;
     	uint time;

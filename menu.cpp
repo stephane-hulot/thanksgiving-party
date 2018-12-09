@@ -6,9 +6,11 @@ Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficult
     buttons({
         Button(550, 400, 140, 55), //play
         Button(380, 470, 600, 55), //difficulty
-        Button(550, 540, 140, 55), //menu quit
+        Button(550, 610, 140, 55), //menu quit
         Button(500, 300, 220, 55), //resume
-        Button(530, 370, 140, 55) //pause quit
+        Button(530, 370, 140, 55), //pause quit
+        Button(550, 540, 140, 55), //menu help
+        Button(550, 600, 140, 55) //help back
     })
 {
 
@@ -37,6 +39,10 @@ void Menu::handle_click(ushort button_id)
         wants_to_quit = true;
     else if(button_id == 3) //resume
         current = None;
+    else if(button_id == 5) //menu help
+        current = Help;
+    else if(button_id == 6) //help back
+        current = Main;
 }
 
 Menu::~Menu()

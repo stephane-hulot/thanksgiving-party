@@ -162,6 +162,7 @@ bool Map::update_doors(float player_x, float player_y, float dt)
 			{
 				set_tile(doors.at(i-1).x, doors.at(i-1).y, ' ');
 				doors.erase(doors.begin() + i-1);
+				update_dist_map(player_x, player_y);
 				return true;
 			}
 		}

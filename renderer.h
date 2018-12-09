@@ -35,10 +35,12 @@ class Renderer
         void draw_text(ushort x, ushort y, std::string text, bool big_text, SDL_Color ttf_color); //draws text using sdl_ttf
 
         //UI display
+        void display_normal(int fps);
         void display_menu();
         void display_pause_menu();
         void display_game_over();
         void display_win();
+        void display_help();
 
         SDL_Window* window;
         SDL_Renderer* sdl_renderer;

@@ -229,14 +229,10 @@ void Renderer::draw(uint fps)
         display_game_over();
     else if(menu->current == Win)
         display_win();
-    else //normal display
-    {   
-        std::string fps_text = std::to_string(fps) + " FPS";
-        std::string score_text = std::to_string(map->enemy_count) + " enemies left - Timer:" + menu->timer.get_time_string();
-        draw_text(10, 10, score_text, false, ttf_color_white);
-        draw_text(10, 60, fps_text, false, ttf_color_white);
-        draw_text(10, screen_h - 62, std::to_string(player->health), false, ttf_color_white);
-    }
+    else if(menu->current == Help)
+        display_help();
+    else
+        display_normal(fps);
     
     SDL_RenderPresent(sdl_renderer);
 }
@@ -330,20 +326,30 @@ void Renderer::draw_text(ushort x, ushort y, std::string text, bool big_text, SD
     SDL_FreeSurface(ttf_surface);
 }
 
+void Renderer::display_normal(int fps)
+{   
+    std::string fps_text = std::to_string(fps) + " FPS";
+    std::string score_text = std::to_string(map->enemy_count) + " turkeys left - Timer:" + menu->timer.get_time_string();
+    draw_text(10, 10, score_text, false, ttf_color_white);
+    draw_text(10, 60, fps_text, false, ttf_color_white);
+    draw_text(10, screen_h - 62, std::to_string(player->health), false, ttf_color_white);
+}
+
 void Renderer::display_menu()
 {   
     draw_text(100, 100, "Thanksgiving Party", true, ttf_color_white);
     draw_text(550, 400, "PLAY", false, menu->check_hover(0) ? ttf_color_banana : ttf_color_white);
     std::string diff_display = std::string("DIFFICULTY:") + (menu->difficulty == 0 ? "EASY" : (menu->difficulty == 1 ? "NORMAL" : "HARD"));
     draw_text(380, 470, diff_display, false, menu->check_hover(1) ? ttf_color_banana : ttf_color_white);
-    draw_text(550, 540, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 540, "HELP", false, menu->check_hover(5) ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 610, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
 }
 
 void Renderer::display_pause_menu()
 {   
     draw_text(470, 100, "PAUSE", true, ttf_color_white);
-    draw_text(500, 300, "RESUME", false, menu->check_hover(3) ? ttf_color_banana : ttf_color_white);
-    draw_text(530, 370, "QUIT", false, menu->check_hover(4) ? ttf_color_banana : ttf_color_white);
+    draw_text(520, 300, "RESUME", false, menu->check_hover(3) ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 370, "QUIT", false, menu->check_hover(4) ? ttf_color_banana : ttf_color_white);
 }
 
 void Renderer::display_game_over()
@@ -355,6 +361,18 @@ void Renderer::display_win()
 {   
     draw_text(380, 200, "You won !", true, ttf_color_white);
     draw_text(250, 300, "Your time : " + menu->timer.get_time_string(), false, ttf_color_white);
+    draw_text(550, 370, "QUIT", false, menu->check_hover(4) ? ttf_color_banana : ttf_color_white);
+}
+
+void Renderer::display_help()
+{   
+    draw_text(500, 50, "HELP", true, ttf_color_white);
+    draw_text(20, 200, "Move : Z/Q/S/D", false, ttf_color_white);
+    draw_text(20, 270, "Camera : Left and right arrows", false, ttf_color_white);
+    draw_text(20, 340, "Fire : Spacebar", false, ttf_color_white);
+    draw_text(20, 450, "Kill every turkey as fast ", false, ttf_color_white);
+    draw_text(20, 520, "as possible !", false, ttf_color_white);
+    draw_text(530, 600, "BACK", false, menu->check_hover(6) ? ttf_color_banana : ttf_color_white);
 }
 
 //##########

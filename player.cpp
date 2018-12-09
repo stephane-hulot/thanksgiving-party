@@ -58,7 +58,7 @@ void Player::handle_events(float dt)
             }
 
             //quits the game if the player is dead and presses Space or Escape
-            if(menu->current == GameOver || menu->current == Win)
+            if(menu->current == GameOver)
             {
                 if(event.key.keysym.sym == SDLK_SPACE || event.key.keysym.sym == SDLK_ESCAPE)
                     menu->wants_to_quit = true;
@@ -69,7 +69,7 @@ void Player::handle_events(float dt)
             menu->wants_to_quit = event.type == SDL_QUIT;
     }
 
-    if(menu->current == Main)
+    if(menu->current == Main || menu->current == Help)
     {
         angle += dt * 0.1;
         return;
@@ -157,6 +157,7 @@ void Player::Fire()
             {
                 map->set_tile(ushort(ray_x), ushort(ray_y), ' ');
                 map->add_temp_sprite(7, ushort(ray_x) + 0.5, ushort(ray_y) + 0.5, 1000);
+                map->sort_sprites(x, y);
             }
         }
         else
@@ -166,11 +167,12 @@ void Player::Fire()
                 if(sprites.at(i).type == Enemy)
                 {
                    float sqr_dist = pow(ray_x - sprites.at(i).x, 2) + pow(ray_y - sprites.at(i).y, 2);
-                    if(sqr_dist < 0.015)
+                    if(sqr_dist < 0.016)
                     {
                         map->delete_sprite(i);
                         hit_wall = true;
                         map->add_temp_sprite(6, sprites.at(i).x, sprites.at(i).y, 400);
+                        map->sort_sprites(x, y);
 
                         map->enemy_count--;
                         if(map->enemy_count < 1)
