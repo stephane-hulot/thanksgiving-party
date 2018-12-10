@@ -5,6 +5,7 @@
 #include "map.h"
 #include "button.h"
 #include "timer.h"
+#include "leaderboard.h"
 
 enum CurrentMenu {None, Main, Pause, GameOver, Win, Help};
 enum Difficulty {Easy, Normal, Hard};
@@ -20,6 +21,7 @@ class Menu
         bool mouse_down = false; //true if a mouse button down during this frame, this is handled by the class Player
         Difficulty difficulty = Normal;
         Timer timer;
+        Leaderboard leaderboard;
         Button buttons[7]; //UI buttons
 
         ~Menu();

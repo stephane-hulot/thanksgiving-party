@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
  
-Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficulty(Normal), timer(Timer()),
+Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficulty(Normal), timer(), leaderboard(),
     buttons({
         Button(550, 400, 140, 55), //play
         Button(380, 470, 600, 55), //difficulty
