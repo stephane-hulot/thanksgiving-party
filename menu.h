@@ -22,7 +22,7 @@ class Menu
         Difficulty difficulty = Normal;
         Timer timer;
         Leaderboard leaderboard;
-        Button buttons[7]; //UI buttons
+        Button buttons[8]; //UI buttons
 
         ~Menu();
 

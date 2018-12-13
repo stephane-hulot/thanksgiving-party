@@ -8,14 +8,6 @@ Renderer::Renderer(Player* p, Map* ma, Menu* me) : window(NULL), sdl_renderer(NU
     
 }
 
-Renderer& Renderer::operator=(const Renderer& r)
-{
-    player = std::move(r.player);
-    map = std::move(r.map);
-    menu = std::move(r.menu);
-    return *this;
-}
-
 bool Renderer::init_sdl(const char* title, ushort width, ushort height)
 {
     //24 bits colors
@@ -359,9 +351,15 @@ void Renderer::display_game_over()
 
 void Renderer::display_win()
 {   
-    draw_text(380, 200, "You won !", true, ttf_color_white);
-    draw_text(250, 300, "Your time : " + menu->timer.get_time_string(), false, ttf_color_white);
-    draw_text(550, 370, "QUIT", false, menu->check_hover(4) ? ttf_color_banana : ttf_color_white);
+    draw_text(380, 50, "You won !", true, ttf_color_white);
+    draw_text(250, 170, "Your time : " + menu->timer.get_time_string(), false, ttf_color_white);
+    for(int i = 0; i < 5; i++)
+    {
+        std::string text = std::to_string(i+1) + " - ";
+        text += menu->timer.get_time_string(menu->leaderboard.scores[i]);
+        draw_text(300, 250 + i * 70, text, false, ttf_color_white);
+    }
+    draw_text(550, 600, "QUIT", false, menu->check_hover(7) ? ttf_color_banana : ttf_color_white);
 }
 
 void Renderer::display_help()

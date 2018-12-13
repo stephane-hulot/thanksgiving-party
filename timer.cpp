@@ -28,13 +28,18 @@ uint Timer::get_time()
 
 std::string Timer::get_time_string()
 {
-	uint t = get_time();
+	return get_time_string(get_time());	
+}
+
+std::string Timer::get_time_string(uint t)
+{
 	uint min = t / 60000;
 	uint sec = (t / 1000) % 60;
 	uint ms = t % 1000;
-	std::string res = (min < 10 ? "0" : "") + std::to_string(min) + ":";
-	res += (sec < 10 ? "0" : "") + std::to_string(sec);
-	res += "." + std::to_string(ms);
+	std::string res = std::string(min < 10 ? "0" : "") + std::to_string(min) + ":";
+	res += std::string(sec < 10 ? "0" : "") + std::to_string(sec);
+	res += "." + std::string(ms < 100 ? "0" : "") + std::string(ms < 10 ? "0" : "");
+	res += std::to_string(ms);
 	return res;
 }
 

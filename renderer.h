@@ -19,9 +19,9 @@ class Renderer
         void draw(uint fps); //renders the game and UI and displays it
         ~Renderer();
 
-        //copy constructor to avoid warning in c++11
-        Renderer(const Renderer& r) : Renderer(r.player, r.map, r.menu) {};
-        Renderer& operator=(const Renderer& r);
+        //forbids copy constructor to avoid warning in c++11
+        Renderer(const Renderer& r) = delete;
+        Renderer& operator=(const Renderer& r) = delete;
         
     private:
         void set_pixel(ushort x, ushort y, Uint32 pixel); //sets a pixel on the screen

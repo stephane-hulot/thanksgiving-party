@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cmath>
-#include "player.h"
+#include "menu.h"
  
 Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficulty(Normal), timer(), leaderboard(),
     buttons({
@@ -10,7 +10,8 @@ Menu::Menu() : wants_to_quit(false), current(Main), mouse_down(false), difficult
         Button(500, 300, 220, 55), //resume
         Button(530, 370, 140, 55), //pause quit
         Button(550, 540, 140, 55), //menu help
-        Button(550, 600, 140, 55) //help back
+        Button(550, 600, 140, 55), //help back
+        Button(550, 600, 140, 55) //win quit
     })
 {
 
@@ -35,7 +36,7 @@ void Menu::handle_click(ushort button_id)
     }
     else if(button_id == 1) //difficulty
         difficulty = (Difficulty)(difficulty != 2 ? difficulty + 1 : 0);
-    else if(button_id == 2 || button_id == 4) //quit
+    else if(button_id == 2 || button_id == 4 || button_id == 7) //quit
         wants_to_quit = true;
     else if(button_id == 3) //resume
         current = None;

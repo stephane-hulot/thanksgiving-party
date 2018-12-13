@@ -11,6 +11,7 @@ class Leaderboard
 		Leaderboard(); //create a leadeboard by reading the file
 		~Leaderboard(); //free memory and save scores to disk
 
+		//forbids copy constructor to avoid warning in c++11
 		Leaderboard(const Leaderboard& l) = delete;
         Leaderboard& operator=(const Leaderboard& l) = delete;
 

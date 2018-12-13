@@ -58,9 +58,9 @@ class Map
 		void add_temp_sprite(ushort itex, float x, float y, ushort size); //adds a sprite to the map that is delete 500ms later (for explosions)
 		~Map();
 
-		//copy constructor to avoid warning in c++11
-        Map(const Map& m) : Map() {map = m.map;};
-        Map& operator=(const Map& m);
+		//forbids copy constructor to avoid warning in c++11
+        Map(const Map& m) = delete;
+        Map& operator=(const Map& m) = delete;
 
 	private:
 		char* map;

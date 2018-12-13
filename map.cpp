@@ -113,14 +113,6 @@ Map::Map() : speed(1.2), damage(0), enemy_count(0), map(NULL), dist(NULL), sprit
 	update_dist_map(2, 2);
 }
 
-Map& Map::operator=(const Map& m)
-{
-	map = std::move(m.map);
-	w = m.w;
-	h = m.h;
-    return *this;
-}
-
 char Map::get_tile(ushort x, ushort y)
 {
 	if(x >= w || y >= h)

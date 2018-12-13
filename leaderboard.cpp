@@ -19,21 +19,30 @@ void Leaderboard::read_file()
         std::string line;
         std::cout<<"Scores :"<<std::endl;
         while(std::getline(read_flow, line) && i < 5)
-        {   
-            scores[i++] = std::atoi(line.c_str());
-            std::cout<<scores[i]<<std::endl;
+        {
+            int value = 0;
+            try
+            {
+                value = std::stoi(line);
+            }
+            catch(const std::exception& e)
+            {
+                value = 300000; //5min
+            }
+            scores[i++] = value;
+            std::cout<<scores[i-1]<<std::endl;
         }
         read_flow.close();
-        //sort_scores();
+        sort_scores(); //avoids cheating
     }
     else //creates scores file if doesn't exist
     {
         std::ofstream write_flow(scores_file.c_str());
 
-        for(int i= 0 ; i<5 ; i++)
+        for(int i = 0; i < 5; i++)
         {
-            write_flow << "0" << std::endl;
-            scores[i] = 0;
+            scores[i] = 300000; //5min
+            write_flow<<scores[i]<<std::endl;
         }
         write_flow.close();
         read_flow.close(); 
@@ -42,9 +51,11 @@ void Leaderboard::read_file()
 
 void Leaderboard::add_score(int score)
 {
-    if(score > scores[4])
+    std::cout<<"Score:"<<score<<":"<<scores[4];
+    if(score < scores[4])
         scores[4] = score;
     sort_scores();
+    write_file();
 }
 
 void Leaderboard::sort_scores()
@@ -55,7 +66,7 @@ void Leaderboard::sort_scores()
     {
         for(int j = i; j < 5; j++)
         {
-            if(scores[j] > scores[i])
+            if(scores[j] < scores[i])
             {
                 tmp = scores[i];
                 scores[i] = scores[j];

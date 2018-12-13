@@ -12,13 +12,6 @@ Player::Player(Map* ma, Menu* me) : display_flash(false), health(100), key_count
     }
 }
 
-Player& Player::operator=(const Player& p)
-{
-    map = std::move(p.map);
-    menu = std::move(p.menu);
-    return *this;
-}
-
 void Player::handle_events(float dt)
 {
     SDL_Event event;
@@ -179,6 +172,7 @@ void Player::Fire()
                         {
                             menu->timer.stop();
                             menu->current = Win;
+                            menu->leaderboard.add_score(menu->timer.get_time());
                         }
                         break;
                     } 
