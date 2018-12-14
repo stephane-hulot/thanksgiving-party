@@ -2,6 +2,7 @@
 #include <iostream>
 #include "renderer.h"
 #include "player.h"
+#include "sound.h"
 
 int main()
 {
@@ -14,6 +15,8 @@ int main()
     Menu menu;
 	Player player(&map, &menu);
     Renderer renderer(&player, &map, &menu);
+    Sound sound(&menu, &player, &map);
+    sound.init_sounds();
 
     if(!renderer.init_sdl("Thanksgiving Party", 1280, 720))
         return 0;
@@ -57,6 +60,7 @@ int main()
 
         player.handle_events(dt);
         renderer.draw(fps);
+        sound.play_sounds();
     }
 
     return 0;

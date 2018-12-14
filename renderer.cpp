@@ -171,7 +171,6 @@ void Renderer::draw(uint fps)
         if(player->display_flash)
         {
             draw_2d_sprite(3, offset, screen_h - 400, 400.0);
-            player->display_flash = false;
         }
         draw_2d_sprite(0, offset, screen_h - 400, 400.0);
 
