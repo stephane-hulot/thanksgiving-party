@@ -4,15 +4,32 @@
 #include <SDL2/SDL_mixer.h>
 #include "sound.h"
 
-Sound::Sound(Menu* me, Player* p, Map* ma) : themestring("sounds/theme.ogg"), gunshotstring("sounds/gunshot.ogg"), menustring("sounds/menu.ogg"), pausestring("sounds/pause.ogg"), overstring("sounds/gameover.ogg"), winstring("sounds/victory.ogg"), wallstring("sounds/wall.ogg"), deathstring("sounds/death_turkey.ogg"), keystring("sounds/key.ogg"), turkstring("sounds/turkey.ogg"), theme((char*)themestring.c_str()), 
-	gunshot((char*)gunshotstring.c_str()), music_menu((char*)menustring.c_str()), music_pause((char*)pausestring.c_str()), gameover((char*)overstring.c_str()), victory((char*)winstring.c_str()), wall((char*)wallstring.c_str()), death_turk((char*)deathstring.c_str()), key((char*)keystring.c_str()), turkey((char*)turkstring.c_str()), menu(me), player(p), map(ma)
+Sound::Sound(Menu* me, Player* p, Map* ma) : theme(NULL), music_menu(NULL), music_pause(NULL), gameover(NULL), victory(NULL),
+	gunshot(NULL), death_turkey(NULL), key(NULL), turkey(NULL), wall(NULL), menu(me), player(p), map(ma)
 {
 	
 }
 
+void Sound::init_sounds()
+{
+	std::cout<<"Loading sounds ..."<<std::endl;
+	//Initialize SDL_mixer 
+	Mix_Init(MIX_INIT_OGG);		
+	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
+
+	theme = load_sound("sounds/theme.ogg");
+	music_menu  = load_sound("sounds/menu.ogg");
+	music_pause = load_sound("sounds/pause.ogg");
+	gameover = load_sound("sounds/gameover.ogg");
+	victory = load_sound("sounds/victory.ogg");
+	gunshot = load_sound("sounds/gunshot.ogg");
+	death_turkey = load_sound("sounds/death_turkey.ogg");
+	key = load_sound("sounds/key.ogg");
+	turkey = load_sound("sounds/turkey.ogg");
+}
+
 void Sound::play_sounds()
 {
-
 	//MUSICS
 	if (menu->current == None)//plays theme when not in menu
 	{
@@ -51,24 +68,15 @@ void Sound::play_sounds()
 
 	if(player->turkey_destruct) 
 	{
-		play(death_turk, 7, 0);
+		play(death_turkey, 7, 0);
     	player->turkey_destruct = false;
 	}
-
 }
 
-void Sound::init_sounds()
-{
-	//Initialize SDL_mixer 
-	Mix_Init(MIX_INIT_OGG);//			
-	Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
-}
-
-Mix_Chunk* Sound::get_sound(char filename[])
+Mix_Chunk* Sound::load_sound(std::string filename)
 {
 	Mix_Chunk* chunk;
-	chunk = Mix_LoadWAV(filename);
-
+	chunk = Mix_LoadWAV(filename.c_str());
 	return chunk;
 }
 
@@ -82,27 +90,26 @@ void Sound::resume_music(int channel)
 	if(Mix_Paused(channel) == 1) Mix_Resume(channel);
 }
 
-void Sound::play(char filename[], int channel, int loops)
+void Sound::play(Mix_Chunk* sound, int channel, int loops)
 {
-	Mix_PlayChannel(channel, get_sound(filename), loops);
+	Mix_PlayChannel(channel, sound, loops);
 }
 
 Sound::~Sound()
 {
-	// quit SDL_mixer
 	//freeMusics
-	Mix_FreeChunk(get_sound(theme));
-	Mix_FreeChunk(get_sound(music_menu));
-	Mix_FreeChunk(get_sound(music_pause));
-	Mix_FreeChunk(get_sound(gameover));
-	Mix_FreeChunk(get_sound(victory));
+	Mix_FreeChunk(theme);
+	Mix_FreeChunk(music_menu);
+	Mix_FreeChunk(music_pause);
+	Mix_FreeChunk(gameover);
+	Mix_FreeChunk(victory);
 
 	//freeSFX
-	Mix_FreeChunk(get_sound(gunshot));
-	Mix_FreeChunk(get_sound(death_turk));
-	Mix_FreeChunk(get_sound(wall));
-	Mix_FreeChunk(get_sound(key));
-	Mix_FreeChunk(get_sound(turkey));
+	Mix_FreeChunk(gunshot);
+	Mix_FreeChunk(death_turkey);
+	Mix_FreeChunk(wall);
+	Mix_FreeChunk(key);
+	Mix_FreeChunk(turkey);
 
 	Mix_CloseAudio();
 	Mix_Quit();
