@@ -31,6 +31,7 @@ class Sound
 		Mix_Chunk* key;
 		Mix_Chunk* turkey;
 		Mix_Chunk* wall;
+		Mix_Chunk* hurt;
 
 		Mix_Chunk* load_sound(std::string filename);
         void pause_music(int channel);

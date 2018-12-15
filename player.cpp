@@ -2,7 +2,7 @@
 #include <cmath>
 #include "player.h"
  
-Player::Player(Map* ma, Menu* me) : display_flash(false), health(100), key_count(0), turkey_destruct(false), x(3), y(3), angle(0),
+Player::Player(Map* ma, Menu* me) : display_flash(false), health(100), key_count(0), turkey_destruct(false), wall_destruct(false), x(3), y(3), angle(0),
     turn(0), walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(ma), menu(me)
 {
     pressed_keys = new bool[7];
@@ -148,6 +148,7 @@ void Player::Fire()
             hit_wall = true;
             if(map->get_tile(ushort(ray_x), ushort(ray_y)) == '2')
             {
+                wall_destruct = true;
                 map->set_tile(ushort(ray_x), ushort(ray_y), ' ');
                 map->add_temp_sprite(7, ushort(ray_x) + 0.5, ushort(ray_y) + 0.5, 1000);
                 map->sort_sprites(x, y);

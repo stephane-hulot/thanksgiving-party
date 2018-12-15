@@ -14,7 +14,7 @@ class Player
         bool display_flash = false;
         int health = 100;
         ushort key_count = 0;
-        bool turkey_destruct;
+        bool turkey_destruct, wall_destruct;
 
         float get_x();
         float get_y();

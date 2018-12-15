@@ -5,7 +5,7 @@
 #include "sound.h"
 
 Sound::Sound(Menu* me, Player* p, Map* ma) : theme(NULL), music_menu(NULL), music_pause(NULL), gameover(NULL), victory(NULL),
-	gunshot(NULL), death_turkey(NULL), key(NULL), turkey(NULL), wall(NULL), menu(me), player(p), map(ma)
+	gunshot(NULL), death_turkey(NULL), key(NULL), turkey(NULL), wall(NULL), hurt(NULL), menu(me), player(p), map(ma)
 {
 	
 }
@@ -26,6 +26,8 @@ void Sound::init_sounds()
 	death_turkey = load_sound("sounds/death_turkey.ogg");
 	key = load_sound("sounds/key.ogg");
 	turkey = load_sound("sounds/turkey.ogg");
+	wall = load_sound("sounds/wall.ogg");
+	hurt = load_sound("sounds/hurt.ogg");
 }
 
 void Sound::play_sounds()
@@ -62,14 +64,20 @@ void Sound::play_sounds()
 	//SOUND EFFECTS
 	if(player->display_flash) 
 	{
-		play(gunshot, 6, 0);
+		play(gunshot, 5, 0);
 		player->display_flash = false;
 	}
 
 	if(player->turkey_destruct) 
 	{
-		play(death_turkey, 7, 0);
+		play(death_turkey, 6, 0);
     	player->turkey_destruct = false;
+	}
+
+	if(player->wall_destruct) 
+	{
+		play(wall, 7, 0);
+    	player->wall_destruct = false;
 	}
 }
 
@@ -110,6 +118,7 @@ Sound::~Sound()
 	Mix_FreeChunk(wall);
 	Mix_FreeChunk(key);
 	Mix_FreeChunk(turkey);
+	Mix_FreeChunk(hurt);
 
 	Mix_CloseAudio();
 	Mix_Quit();
