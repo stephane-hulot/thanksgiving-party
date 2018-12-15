@@ -56,6 +56,7 @@ class Map
 		int damage_player(); //returns the amount of damage the player should receive based on difficulty and nearby turkeys
 		bool pickup_keys(); //returns true and remove the key from the map if the player is close enough, returns false if no key is picked up
 		void add_temp_sprite(ushort itex, float x, float y, ushort size); //adds a sprite to the map that is delete 500ms later (for explosions)
+		void update_dist_map(unsigned short px, unsigned short py);
 		~Map();
 
 		//forbids copy constructor to avoid warning in c++11
@@ -68,7 +69,6 @@ class Map
 		std::vector<Sprite> sprites;
 		std::vector<Door> doors;
 		Uint32 get_pixel(SDL_Surface* source, unsigned short x, unsigned short y);
-		void update_dist_map(unsigned short px, unsigned short py);
 };
 
 #endif

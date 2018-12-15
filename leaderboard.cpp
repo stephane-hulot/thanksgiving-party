@@ -51,7 +51,6 @@ void Leaderboard::read_file()
 
 void Leaderboard::add_score(int score)
 {
-    std::cout<<"Score:"<<score<<":"<<scores[4];
     if(score < scores[4])
         scores[4] = score;
     sort_scores();
@@ -89,4 +88,5 @@ void Leaderboard::write_file()
 Leaderboard::~Leaderboard()
 {
     delete scores;
+    std::cout<<"Leaderboard deleted"<<std::endl;
 }

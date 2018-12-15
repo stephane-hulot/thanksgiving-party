@@ -9,6 +9,7 @@
 
 enum CurrentMenu {None, Main, Pause, GameOver, Win, Help};
 enum Difficulty {Easy, Normal, Hard};
+enum SoundVolume {NoSound, LowSound, NormalSound};
 
 class Menu
 {
@@ -20,9 +21,10 @@ class Menu
         CurrentMenu current = Main; //currently displayed menu
         bool mouse_down = false; //true if a mouse button down during this frame, this is handled by the class Player
         Difficulty difficulty = Normal;
+        SoundVolume sound = LowSound;
         Timer timer;
         Leaderboard leaderboard;
-        Button buttons[8]; //UI buttons
+        Button buttons[9]; //UI buttons
 
         ~Menu();
 

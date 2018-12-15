@@ -6,6 +6,10 @@
 #include "button.h"
 #include "menu.h"
 
+const float speed = 30;
+const float  turn_accel = 0.18;
+const float turn_max = 0.08;
+
 class Player
 {
 	public:
@@ -14,7 +18,7 @@ class Player
         bool display_flash = false;
         int health = 100;
         ushort key_count = 0;
-        bool turkey_destruct, wall_destruct;
+        bool turkey_destruct, wall_destruct, hurt_sound, key_sound;
 
         float get_x();
         float get_y();
@@ -29,7 +33,6 @@ class Player
     private:
         float x, y, angle; //player position and rotation
         float turn, walk_x, walk_y; // player input
-        float speed, turn_accel, turn_max;
         bool* pressed_keys;
 
         void update_key(SDL_Keycode key, bool state);

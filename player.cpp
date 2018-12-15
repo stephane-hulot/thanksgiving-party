@@ -2,8 +2,8 @@
 #include <cmath>
 #include "player.h"
  
-Player::Player(Map* ma, Menu* me) : display_flash(false), health(100), key_count(0), turkey_destruct(false), wall_destruct(false), x(3), y(3), angle(0),
-    turn(0), walk_x(0), walk_y(0), speed(30), turn_accel(0.18), turn_max(0.08), pressed_keys(NULL), map(ma), menu(me)
+Player::Player(Map* ma, Menu* me) : display_flash(false), health(100), key_count(0), turkey_destruct(false), wall_destruct(false),
+    hurt_sound(false), key_sound(false), x(3), y(3), angle(0), turn(0), walk_x(0), walk_y(0), pressed_keys(NULL), map(ma), menu(me)
 {
     pressed_keys = new bool[7];
     for(int i = 0; i < 7; i++)
@@ -19,6 +19,10 @@ void Player::handle_events(float dt)
         menu->current = GameOver;
 
     menu->mouse_down = false; //the menu should see the mouse button clicked for one frame only
+    display_flash = false;
+    turkey_destruct = false;
+    wall_destruct = false;
+
     while(SDL_PollEvent(&event))
     {
         //mouse button is clicked so we update the menu
@@ -152,6 +156,7 @@ void Player::Fire()
                 map->set_tile(ushort(ray_x), ushort(ray_y), ' ');
                 map->add_temp_sprite(7, ushort(ray_x) + 0.5, ushort(ray_y) + 0.5, 1000);
                 map->sort_sprites(x, y);
+                map->update_dist_map(x, y);
             }
         }
         else

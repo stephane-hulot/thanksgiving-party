@@ -4,16 +4,16 @@
 #include <SDL2/SDL_mixer.h>
 #include "menu.h"
 #include "player.h"
-#include "map.h"
 #include <SDL2/SDL.h>
 
 
 class Sound
 {
 	public:
-		Sound(Menu* me, Player* p, Map* ma);
+		Sound(Menu* me, Player* p);
 		void init_sounds();
 		void play_sounds();
+		void set_volume(int vol);
 		~Sound();
 
 		//forbids copy constructor to avoid warning in c++11
@@ -40,7 +40,6 @@ class Sound
 
 		Menu* menu;
 		Player* player;
-		Map* map;
 };
 
 #endif

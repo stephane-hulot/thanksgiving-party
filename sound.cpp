@@ -4,8 +4,8 @@
 #include <SDL2/SDL_mixer.h>
 #include "sound.h"
 
-Sound::Sound(Menu* me, Player* p, Map* ma) : theme(NULL), music_menu(NULL), music_pause(NULL), gameover(NULL), victory(NULL),
-	gunshot(NULL), death_turkey(NULL), key(NULL), turkey(NULL), wall(NULL), hurt(NULL), menu(me), player(p), map(ma)
+Sound::Sound(Menu* me, Player* p) : theme(NULL), music_menu(NULL), music_pause(NULL), gameover(NULL), victory(NULL),
+	gunshot(NULL), death_turkey(NULL), key(NULL), turkey(NULL), wall(NULL), hurt(NULL), menu(me), player(p)
 {
 	
 }
@@ -62,22 +62,25 @@ void Sound::play_sounds()
 	}
 
 	//SOUND EFFECTS
-	if(player->display_flash) 
-	{
-		play(gunshot, 5, 0);
-		player->display_flash = false;
-	}
+	if(player->display_flash)
+		play(gunshot, 4, 0);
 
-	if(player->turkey_destruct) 
-	{
-		play(death_turkey, 6, 0);
-    	player->turkey_destruct = false;
-	}
+	if(player->turkey_destruct)
+		play(death_turkey, 5, 0);
 
-	if(player->wall_destruct) 
+	if(player->wall_destruct)
+		play(wall, 6, 0);
+
+	if(player->hurt_sound)
 	{
-		play(wall, 7, 0);
-    	player->wall_destruct = false;
+		play(hurt, 7, 0);
+		player->hurt_sound = false;
+	}
+	
+	if(player->key_sound)
+	{
+		play(key, 6, 0);
+		player->key_sound = false;
 	}
 }
 
@@ -86,6 +89,11 @@ Mix_Chunk* Sound::load_sound(std::string filename)
 	Mix_Chunk* chunk;
 	chunk = Mix_LoadWAV(filename.c_str());
 	return chunk;
+}
+
+void Sound::set_volume(int volume)
+{
+	Mix_Volume(-1, volume);
 }
 
 void Sound::pause_music(int channel)

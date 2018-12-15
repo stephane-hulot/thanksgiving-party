@@ -207,7 +207,7 @@ void Renderer::draw(uint fps)
     }
 
     if(menu->current == Main)
-        draw_2d_sprite(1, 500, 200, 200);
+        draw_2d_sprite(1, 500, 140, 200);
     
     SDL_UpdateTexture(render_texture, NULL, pixels, screen_w * sizeof(Uint32));
     SDL_RenderCopy(sdl_renderer, render_texture, NULL, NULL);
@@ -328,12 +328,14 @@ void Renderer::display_normal(int fps)
 
 void Renderer::display_menu()
 {   
-    draw_text(100, 100, "Thanksgiving Party", true, ttf_color_white);
-    draw_text(550, 400, "PLAY", false, menu->check_hover(0) ? ttf_color_banana : ttf_color_white);
+    draw_text(100, 50, "Thanksgiving Party", true, ttf_color_white);
+    draw_text(550, 350, "PLAY", false, menu->check_hover(0) ? ttf_color_banana : ttf_color_white);
     std::string diff_display = std::string("DIFFICULTY:") + (menu->difficulty == 0 ? "EASY" : (menu->difficulty == 1 ? "NORMAL" : "HARD"));
-    draw_text(380, 470, diff_display, false, menu->check_hover(1) ? ttf_color_banana : ttf_color_white);
-    draw_text(550, 540, "HELP", false, menu->check_hover(5) ? ttf_color_banana : ttf_color_white);
-    draw_text(550, 610, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
+    draw_text(380, 420, diff_display, false, menu->check_hover(1) ? ttf_color_banana : ttf_color_white);
+    std::string sound_display = std::string("SOUND:") + (menu->sound == 0 ? "NONE" : (menu->sound == 1 ? "LOW" : "NORMAL"));
+    draw_text(460, 490, sound_display, false, menu->check_hover(8) ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 560, "HELP", false, menu->check_hover(5) ? ttf_color_banana : ttf_color_white);
+    draw_text(550, 620, "QUIT", false, menu->check_hover(2) ? ttf_color_banana : ttf_color_white);
 }
 
 void Renderer::display_pause_menu()
